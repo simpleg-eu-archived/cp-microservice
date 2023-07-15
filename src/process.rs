@@ -22,7 +22,7 @@ pub static PROCESS: Lazy<Process> = Lazy::new(|| {
         let metrics = Handle::current().metrics();
 
         loop {
-            match timeout(Duration::from_millis(100), receiver.recv()).await {
+            match timeout(Duration::from_millis(100u64), receiver.recv()).await {
                 Ok(request) => match request {
                     Some(request) => match request {
                         ProcessRequest::STOP => {
