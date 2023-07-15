@@ -3,6 +3,7 @@ use tokio::time::sleep;
 use cp_microservice::process::PROCESS;
 use cp_microservice::process_state::ProcessState;
 
+/// Expected to exit with code 0.
 #[tokio::main]
 pub async fn main() {
     let state = PROCESS.state();
