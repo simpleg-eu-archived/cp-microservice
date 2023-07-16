@@ -1,11 +1,7 @@
 name: CI
 
 on:
-  workflow_call:
-    inputs:
-      cache-key:
-        required: true
-        type: string
+  push:
 
 env:
   CARGO_TERM_COLOR: always
@@ -19,17 +15,19 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Cache 
-        uses: Swatinem/rust-cache@v2.2.0
-        with:
-          cache-on-failure: "true"
       - name: Replace placeholder version
         run: |
-          sed -i 's/5123.0.0/'
-          
+          sed -i 's/5123.0.0/$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION'
+          echo "Version: $MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION"
+        env:
+          PATCH_VERSION: ${{ github.run_attempt }}
+        
       - name: Build
         run: cargo build --release --verbose
       - name: Run unit tests
         run: cargo test --verbose
-      
+      - name: Run integration tests
+        run: |
+          chmod +x run_tests.sh
+          ./run_tests.sh
     
