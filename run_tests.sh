@@ -1,7 +1,4 @@
 #!/bin/bash
-cd ./target/debug
-
-resultExitCode=0
 
 cargo build
 
@@ -13,6 +10,10 @@ if [ $build_code -ne 0 ]; then
 else
   echo "Build: SUCCESS"
 fi
+
+cd ./target/debug
+
+resultExitCode=0
 
 # TEST EXIT, EXPECTED EXIT CODE: 1
 ./test_exit
