@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  workflow_call:
+    inputs:
+      cache-key:
+        required: true
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+    
+jobs:
+  ci:
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Cache 
+        uses: Swatinem/rust-cache@v2.2.0
+        with:
+          cache-on-failure: "true"
+      - name: Replace placeholder version
+        run: |
+          sed -i 's/5123.0.0/'
+          
+      - name: Build
+        run: cargo build --release --verbose
+      - name: Run unit tests
+        run: cargo test --verbose
+      
+    
