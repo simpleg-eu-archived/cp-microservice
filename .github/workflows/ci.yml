@@ -20,7 +20,9 @@ jobs:
           sed -i 's/5123.0.0/$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION/' Cargo.toml
           echo "Version: $MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION"
         env:
-          PATCH_VERSION: ${{ github.run_attempt }}
+          MAJOR_VERSION: ${{ env.MAJOR_VERSION }}
+          MINOR_VERSION: ${{ env.MINOR_VERSION }}
+          PATCH_VERSION: ${{ github.run_number }}
         
       - name: Build
         run: cargo build --release --verbose
