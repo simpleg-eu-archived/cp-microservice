@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Replace placeholder version
         run: |
-          sed -i 's/5123.0.0/$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION'
+          sed -i 's/5123.0.0/$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION/'
           echo "Version: $MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION"
         env:
           PATCH_VERSION: ${{ github.run_attempt }}
