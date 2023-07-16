@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -7,7 +7,7 @@ env:
   CARGO_TERM_COLOR: always
     
 jobs:
-  ci:
+  ci-cd:
 
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -30,4 +30,7 @@ jobs:
         run: |
           chmod +x run_tests.sh
           ./run_tests.sh
-    
+      - name: Publish on crates.io
+        run: |
+          cargo login ${{ secrets.CRATES_IO_TOKEN }}
+          cargo publish
