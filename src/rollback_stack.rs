@@ -4,6 +4,13 @@ use serde::Serialize;
 use std::time::Duration;
 use tokio::time::timeout;
 
+///
+/// Stack of rollback requests which will be sent through a specific channel
+/// if a multi-step operation fails.
+///
+/// The request must be Serializable so detailed logging can be provided
+/// if the rollback fails.
+///
 pub struct RollbackStack<RollbackRequest: Serialize> {
     requests: Vec<RollbackRequest>,
     sender: Sender<RollbackRequest>,
@@ -97,7 +104,7 @@ pub async fn execute_rollback_in_expected_order_test() {
 
 #[tokio::test]
 pub async fn return_error_when_channel_closes_test() {
-    let (sender, receiver) = async_channel::unbounded::<RollbackRequestDummy>();
+    let (sender, _receiver) = async_channel::unbounded::<RollbackRequestDummy>();
     sender.close();
 
     let mut rollback_stack: RollbackStack<RollbackRequestDummy> = RollbackStack::new(sender);

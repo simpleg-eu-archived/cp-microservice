@@ -1,6 +1,10 @@
 use serde::Serialize;
 use std::fmt::{Display, Error, Formatter};
 
+///
+/// Facility struct whose main objective is to provide a detailed status when
+/// when the rollback operation has failed.
+///
 #[derive(Serialize)]
 pub struct RollbackSnapshot<RollbackRequest: Serialize> {
     failure_message: String,
