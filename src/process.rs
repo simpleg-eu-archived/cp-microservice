@@ -6,8 +6,10 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Handle;
 use tokio::sync::mpsc::Sender;
-use tokio::sync::{RwLock};
+use tokio::sync::RwLock;
 use tokio::time::timeout;
+
+const PROCESS_REQUEST_RECEIVE_TIMEOUT: u64 = 100u64;
 
 pub static PROCESS: Lazy<Process> = Lazy::new(|| {
     let (sender, mut receiver) = tokio::sync::mpsc::channel::<ProcessRequest>(1024usize);
@@ -22,8 +24,13 @@ pub static PROCESS: Lazy<Process> = Lazy::new(|| {
         let metrics = Handle::current().metrics();
 
         loop {
-            match timeout(Duration::from_millis(100u64), receiver.recv()).await {
-                Ok(request) => match request {
+            if let Ok(request) = timeout(
+                Duration::from_millis(PROCESS_REQUEST_RECEIVE_TIMEOUT),
+                receiver.recv(),
+            )
+            .await
+            {
+                match request {
                     Some(request) => match request {
                         ProcessRequest::STOP => {
                             warn!("process stopping");
@@ -37,7 +44,6 @@ pub static PROCESS: Lazy<Process> = Lazy::new(|| {
                         error!("process mpsc channel has been closed");
                     }
                 }
-                Err(_) => {}
             }
 
             let state_read_guard = state.read().await;
