@@ -16,7 +16,7 @@ use crate::api::input::request::Request;
 use crate::api::input::request_header::RequestHeader;
 use crate::error::Error;
 
-pub struct Dispatch<InputImpl: 'static + Input + Send, LogicRequestType: 'static> {
+pub struct Dispatch<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send> {
     inputs: Vec<InputImpl>,
     actions: Arc<HashMap<String, AsyncCallback<LogicRequestType>>>,
     sender: Sender<LogicRequestType>,
@@ -76,7 +76,6 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
 }
 
 #[cfg(test)]
-
 pub struct LogicRequest {}
 
 pub struct InputTimedImpl {
