@@ -1,10 +1,13 @@
 use std::fmt;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+use serde::Serialize;
+
+#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
 pub enum ErrorKind {
+    Error,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Error {
     pub kind: ErrorKind,
     pub message: String,
