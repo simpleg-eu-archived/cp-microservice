@@ -115,7 +115,7 @@ pub async fn handle_multiple_inputs_concurrently() {
     let expected_inputs: u8 = 2;
 
     let (sender, mut receiver) = tokio::sync::mpsc::channel::<()>(1024usize);
-    let (logic_request_sender, logic_request_receiver) = async_channel::unbounded::<LogicRequest>();
+    let (logic_request_sender, _) = async_channel::unbounded::<LogicRequest>();
     let inputs: Vec<InputTimedImpl> = vec![
         InputTimedImpl::new(sleep_duration, sender.clone()),
         InputTimedImpl::new(sleep_duration, sender.clone()),
@@ -128,7 +128,7 @@ pub async fn handle_multiple_inputs_concurrently() {
     timeout(max_execution_duration, async move {
         let mut count: u8 = 0;
 
-        for i in 0..expected_inputs {
+        for _ in 0..expected_inputs {
             if (receiver.recv().await).is_some() {
                 count += 1;
             }
