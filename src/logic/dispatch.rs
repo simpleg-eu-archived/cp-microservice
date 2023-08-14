@@ -64,8 +64,6 @@ impl<LogicRequestType: Debug, StorageRequestType> Dispatch<LogicRequestType, Sto
 }
 
 #[cfg(test)]
-const TEST_STORAGE_REQUEST_VALUE: &str = "ok";
-
 async fn dummy_executor(
     value: LogicRequest,
     storage_sender: Sender<StorageRequest>,
@@ -79,6 +77,8 @@ async fn dummy_executor(
 
     Ok(())
 }
+
+const TEST_STORAGE_REQUEST_VALUE: &str = "ok";
 
 #[derive(Debug)]
 pub enum LogicRequest {

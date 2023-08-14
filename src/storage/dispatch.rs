@@ -57,11 +57,6 @@ impl<StorageRequestType: Debug> Dispatch<StorageRequestType> {
 }
 
 #[cfg(test)]
-#[derive(Debug)]
-pub enum StorageRequest {
-    DummyElement(String, tokio::sync::oneshot::Sender<String>),
-}
-
 async fn dummy_executor(storage_request: StorageRequest) -> Result<(), Error> {
     match storage_request {
         StorageRequest::DummyElement(message, replier) => {
@@ -70,6 +65,11 @@ async fn dummy_executor(storage_request: StorageRequest) -> Result<(), Error> {
         }
         _ => panic!("unexpected execution path"),
     }
+}
+
+#[derive(Debug)]
+pub enum StorageRequest {
+    DummyElement(String, tokio::sync::oneshot::Sender<String>),
 }
 
 #[tokio::test]
