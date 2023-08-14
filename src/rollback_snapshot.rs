@@ -6,16 +6,16 @@ use std::fmt::{Display, Error, Formatter};
 /// when the rollback operation has failed.
 ///
 #[derive(Serialize)]
-pub struct RollbackSnapshot<RollbackRequest: Serialize> {
+pub struct RollbackSnapshot<RollbackRequestType: Serialize> {
     failure_message: String,
-    pending_requests: Vec<RollbackRequest>,
+    pending_requests: Vec<RollbackRequestType>,
 }
 
-impl<RollbackRequest: Serialize> RollbackSnapshot<RollbackRequest> {
+impl<RollbackRequestType: Serialize> RollbackSnapshot<RollbackRequestType> {
     pub fn new(
         failure_message: String,
-        pending_requests: Vec<RollbackRequest>,
-    ) -> RollbackSnapshot<RollbackRequest> {
+        pending_requests: Vec<RollbackRequestType>,
+    ) -> RollbackSnapshot<RollbackRequestType> {
         RollbackSnapshot {
             failure_message,
             pending_requests,
@@ -23,7 +23,7 @@ impl<RollbackRequest: Serialize> RollbackSnapshot<RollbackRequest> {
     }
 }
 
-impl<RollbackRequest: Serialize> Display for RollbackSnapshot<RollbackRequest> {
+impl<RollbackRequestType: Serialize> Display for RollbackSnapshot<RollbackRequestType> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match serde_json::to_string(self) {
             Ok(string) => {

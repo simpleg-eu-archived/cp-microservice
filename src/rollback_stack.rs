@@ -11,24 +11,24 @@ use tokio::time::timeout;
 /// The request must be Serializable so detailed logging can be provided
 /// if the rollback fails.
 ///
-pub struct RollbackStack<RollbackRequest: Serialize> {
-    requests: Vec<RollbackRequest>,
-    sender: Sender<RollbackRequest>,
+pub struct RollbackStack<RollbackRequestType: Serialize> {
+    requests: Vec<RollbackRequestType>,
+    sender: Sender<RollbackRequestType>,
 }
 
-impl<RollbackRequest: Serialize> RollbackStack<RollbackRequest> {
-    pub fn new(sender: Sender<RollbackRequest>) -> RollbackStack<RollbackRequest> {
+impl<RollbackRequestType: Serialize> RollbackStack<RollbackRequestType> {
+    pub fn new(sender: Sender<RollbackRequestType>) -> RollbackStack<RollbackRequestType> {
         RollbackStack {
             requests: Vec::new(),
             sender,
         }
     }
 
-    pub fn push(&mut self, request: RollbackRequest) {
+    pub fn push(&mut self, request: RollbackRequestType) {
         self.requests.push(request)
     }
 
-    pub async fn rollback(mut self) -> Result<(), RollbackSnapshot<RollbackRequest>> {
+    pub async fn rollback(mut self) -> Result<(), RollbackSnapshot<RollbackRequestType>> {
         loop {
             match self.requests.pop() {
                 Some(request) => match self.sender.send(request).await {
