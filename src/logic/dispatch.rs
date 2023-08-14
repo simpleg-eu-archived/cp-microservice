@@ -109,9 +109,7 @@ pub async fn run_expected_executors() {
     let dispatch: Dispatch<LogicRequest, StorageRequest> =
         Dispatch::new(receiver, executors, storage_request_sender);
 
-    tokio::spawn(async move {
-        dispatch.run().await;
-    });
+    tokio::spawn(dispatch.run());
 
     sender
         .send(LogicRequest::DummyElement("random".to_string()))
