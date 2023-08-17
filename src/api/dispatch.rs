@@ -134,7 +134,7 @@ impl Input for InputTimedImpl {
 #[tokio::test]
 pub async fn handle_multiple_inputs_concurrently() {
     let sleep_duration: Duration = Duration::from_millis(500u64);
-    let max_execution_duration: Duration = Duration::from_millis(1500u64);
+    let max_execution_duration: Duration = Duration::from_millis(900u64);
     let expected_inputs: u8 = 2;
 
     let (sender, mut receiver) = tokio::sync::mpsc::channel::<()>(1024usize);
