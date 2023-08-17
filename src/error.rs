@@ -4,7 +4,9 @@ use serde::Serialize;
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
 pub enum ErrorKind {
-    Error,
+    ApiError,
+    LogicError,
+    StorageError,
 }
 
 #[derive(Debug, Clone, Serialize)]
