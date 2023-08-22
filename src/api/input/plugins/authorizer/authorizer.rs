@@ -53,7 +53,7 @@ fn create_dummy_input_data() -> InputData {
 pub struct AlwaysFailingTokenValidator {}
 
 impl TokenValidator for AlwaysFailingTokenValidator {
-    fn validate(&self, token: &str) -> Result<(), Error> {
+    fn validate(&self, _: &str) -> Result<(), Error> {
         Err(Error::new(ErrorKind::RequestError, "token is invalid"))
     }
 }

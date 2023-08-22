@@ -170,8 +170,8 @@ pub struct InputDummyImpl {
     has_message_been_sent: RwLock<bool>,
 }
 
-impl InputDummyImpl {
-    pub fn new() -> InputDummyImpl {
+impl Default for InputDummyImpl {
+    fn default() -> Self {
         InputDummyImpl {
             has_message_been_sent: RwLock::new(false),
         }
@@ -181,7 +181,7 @@ impl InputDummyImpl {
 #[async_trait]
 impl Input for InputDummyImpl {
     async fn receive(&self) -> Result<InputData, Error> {
-        if (*self.has_message_been_sent.try_read().unwrap()) {
+        if *self.has_message_been_sent.try_read().unwrap() {
             loop {
                 sleep(Duration::MAX).await;
             }
@@ -193,7 +193,7 @@ impl Input for InputDummyImpl {
         );
         let replier: Replier = Arc::new(move |value| Box::pin(async { Ok(()) }));
 
-        if (!(*self.has_message_been_sent.try_read().unwrap())) {
+        if !(*self.has_message_been_sent.try_read().unwrap()) {
             *self.has_message_been_sent.try_write().unwrap() = true;
         }
 
@@ -225,12 +225,11 @@ impl InputPlugin for DummyPlugin {
 pub async fn execute_specified_plugins_for_each_input() {
     const EXPECTED_SUM: u8 = 24u8;
 
-    let inputs: Vec<InputDummyImpl> = vec![InputDummyImpl::new(), InputDummyImpl::new()];
+    let inputs: Vec<InputDummyImpl> = vec![InputDummyImpl::default(), InputDummyImpl::default()];
 
-    let (sender, receiver) = async_channel::unbounded();
+    let (sender, _) = async_channel::unbounded();
 
     let (plugin_sender, mut plugin_receiver) = tokio::sync::mpsc::channel::<u8>(1024usize);
-    let plugin_sender_clone = plugin_sender.clone();
 
     let plugins: Vec<Arc<dyn InputPlugin + Send + Sync>> = vec![
         Arc::new(DummyPlugin::new(13u8, plugin_sender.clone())),
@@ -244,7 +243,7 @@ pub async fn execute_specified_plugins_for_each_input() {
 
     let mut sum: u8 = 0;
 
-    for i in 0..2 {
+    for _ in 0..2 {
         sum += timeout(Duration::from_millis(200u64), plugin_receiver.recv())
             .await
             .expect("timed out waiting for plugin to send byte")
