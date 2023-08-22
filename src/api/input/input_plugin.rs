@@ -1,12 +1,9 @@
-use std::future::Future;
-use std::pin::Pin;
-use std::sync::Arc;
+use async_trait::async_trait;
 
 use crate::api::input::input_data::InputData;
 use crate::error::Error;
 
-pub type InputPlugin = Arc<
-    dyn Fn(InputData) -> Pin<Box<dyn Future<Output = Result<InputData, Error>> + Send + Sync>>
-        + Send
-        + Sync,
->;
+#[async_trait]
+pub trait InputPlugin {
+    async fn handle_input_data(&self, input_data: InputData) -> Result<InputData, Error>;
+}

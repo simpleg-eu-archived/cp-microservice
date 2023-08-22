@@ -1,6 +1,12 @@
-use crate::api::input::{request::Request, replier::Replier};
+use crate::api::input::{replier::Replier, request::Request};
 
 pub struct InputData {
     pub request: Request,
-    pub replier: Replier
+    pub replier: Replier,
+}
+
+impl InputData {
+    pub fn new(request: Request, replier: Replier) -> InputData {
+        InputData { request, replier }
+    }
 }

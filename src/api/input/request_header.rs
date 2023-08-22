@@ -14,4 +14,8 @@ impl RequestHeader {
     pub fn action(&self) -> &str {
         self.action.as_str()
     }
+
+    pub fn token(&self) -> &str {
+        self.token.as_str()
+    }
 }

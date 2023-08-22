@@ -7,6 +7,7 @@ pub enum ErrorKind {
     ApiError,
     LogicError,
     StorageError,
+    RequestError,
 }
 
 #[derive(Debug, Clone, Serialize)]

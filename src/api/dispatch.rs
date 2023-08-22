@@ -22,7 +22,7 @@ pub struct Dispatch<InputImpl: 'static + Input + Send, LogicRequestType: 'static
     inputs: Vec<InputImpl>,
     actions: Arc<HashMap<String, AsyncCallback<LogicRequestType>>>,
     sender: Sender<LogicRequestType>,
-    plugins: Arc<Vec<InputPlugin>>,
+    plugins: Arc<Vec<Arc<dyn InputPlugin + Send + Sync>>>,
 }
 
 impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
@@ -32,7 +32,7 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
         inputs: Vec<InputImpl>,
         actions: HashMap<String, AsyncCallback<LogicRequestType>>,
         sender: Sender<LogicRequestType>,
-        plugins: Vec<InputPlugin>,
+        plugins: Vec<Arc<dyn InputPlugin + Send + Sync>>,
     ) -> Dispatch<InputImpl, LogicRequestType> {
         Dispatch {
             inputs,
@@ -56,7 +56,7 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
                     match result.await {
                         Ok(mut input_data) => {
                             for plugin in plugins_pointer.as_slice() {
-                                input_data = plugin(input_data).await.unwrap();
+                                input_data = plugin.handle_input_data(input_data).await.unwrap();
                             }
 
                             handle_input_data::<LogicRequestType>(
@@ -125,7 +125,10 @@ impl Input for InputTimedImpl {
             .expect("failed to send empty message");
 
         Ok(InputData {
-            request: Request::new(RequestHeader::new("".to_string()), Value::Null),
+            request: Request::new(
+                RequestHeader::new("".to_string(), "".to_string()),
+                Value::Null,
+            ),
             replier: Arc::new(move |value: Value| Box::pin(async { Ok(()) })),
         })
     }
@@ -184,7 +187,10 @@ impl Input for InputDummyImpl {
             }
         }
 
-        let request = Request::new(RequestHeader::new("".to_string()), Value::Null);
+        let request = Request::new(
+            RequestHeader::new("".to_string(), "".to_string()),
+            Value::Null,
+        );
         let replier: Replier = Arc::new(move |value| Box::pin(async { Ok(()) }));
 
         if (!(*self.has_message_been_sent.try_read().unwrap())) {
@@ -195,14 +201,24 @@ impl Input for InputDummyImpl {
     }
 }
 
-async fn first_dummy_plugin(
-    input_data: InputData,
+pub struct DummyPlugin {
     send_value: u8,
     sender: tokio::sync::mpsc::Sender<u8>,
-) -> Result<InputData, Error> {
-    sender.send(send_value).await;
+}
 
-    Ok(input_data)
+impl DummyPlugin {
+    pub fn new(send_value: u8, sender: tokio::sync::mpsc::Sender<u8>) -> DummyPlugin {
+        DummyPlugin { send_value, sender }
+    }
+}
+
+#[async_trait]
+impl InputPlugin for DummyPlugin {
+    async fn handle_input_data(&self, input_data: InputData) -> Result<InputData, Error> {
+        self.sender.send(self.send_value).await;
+
+        Ok(input_data)
+    }
 }
 
 #[tokio::test]
@@ -215,17 +231,10 @@ pub async fn execute_specified_plugins_for_each_input() {
 
     let (plugin_sender, mut plugin_receiver) = tokio::sync::mpsc::channel::<u8>(1024usize);
     let plugin_sender_clone = plugin_sender.clone();
-    let plugins: Vec<InputPlugin> = vec![
-        Arc::new(move |input_data| {
-            Box::pin(first_dummy_plugin(input_data, 13u8, plugin_sender.clone()))
-        }),
-        Arc::new(move |input_data| {
-            Box::pin(first_dummy_plugin(
-                input_data,
-                11u8,
-                plugin_sender_clone.clone(),
-            ))
-        }),
+
+    let plugins: Vec<Arc<dyn InputPlugin + Send + Sync>> = vec![
+        Arc::new(DummyPlugin::new(13u8, plugin_sender.clone())),
+        Arc::new(DummyPlugin::new(11u8, plugin_sender)),
     ];
 
     let dispatch: Dispatch<InputDummyImpl, LogicRequest> =
