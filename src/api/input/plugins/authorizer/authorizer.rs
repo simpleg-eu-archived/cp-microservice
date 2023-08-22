@@ -51,9 +51,9 @@ fn create_dummy_input_data() -> InputData {
 }
 
 #[derive(Default)]
-pub struct AlwaysFailingTokenValidator {}
+pub struct AlwaysFailingTokenWrapper {}
 
-impl TokenWrapper for AlwaysFailingTokenValidator {
+impl TokenWrapper for AlwaysFailingTokenWrapper {
     fn wrap(&self, _: &str) -> Result<Arc<dyn Token + Send + Sync>, Error> {
         Err(Error::new(ErrorKind::RequestError, "token is invalid"))
     }
@@ -61,9 +61,9 @@ impl TokenWrapper for AlwaysFailingTokenValidator {
 
 #[tokio::test]
 pub async fn uses_passed_token_wrapper() {
-    let token_validator: Arc<dyn TokenWrapper + Send + Sync> =
-        Arc::new(AlwaysFailingTokenValidator::default());
-    let authorizer: Authorizer = Authorizer::new(token_validator);
+    let token_wrapper: Arc<dyn TokenWrapper + Send + Sync> =
+        Arc::new(AlwaysFailingTokenWrapper::default());
+    let authorizer: Authorizer = Authorizer::new(token_wrapper);
     let example_input_data: InputData = create_dummy_input_data();
 
     let error = match timeout(
