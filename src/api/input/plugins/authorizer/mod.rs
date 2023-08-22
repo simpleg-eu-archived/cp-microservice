@@ -1,2 +1,3 @@
 pub mod authorizer;
-pub mod token_validator;
+pub mod token;
+pub mod token_wrapper;

@@ -7,18 +7,19 @@ use tokio::time::timeout;
 
 use crate::api::input::input_data::InputData;
 use crate::api::input::input_plugin::InputPlugin;
-use crate::api::input::plugins::authorizer::token_validator::TokenValidator;
+use crate::api::input::plugins::authorizer::token::Token;
+use crate::api::input::plugins::authorizer::token_wrapper::TokenWrapper;
 use crate::api::input::replier::Replier;
 use crate::api::input::request::Request;
 use crate::api::input::request_header::RequestHeader;
 use crate::error::{Error, ErrorKind};
 
 pub struct Authorizer {
-    token_validator: Arc<dyn TokenValidator + Send + Sync>,
+    token_validator: Arc<dyn TokenWrapper + Send + Sync>,
 }
 
 impl Authorizer {
-    pub fn new(token_validator: Arc<dyn TokenValidator + Send + Sync>) -> Authorizer {
+    pub fn new(token_validator: Arc<dyn TokenWrapper + Send + Sync>) -> Authorizer {
         Authorizer { token_validator }
     }
 }
@@ -28,7 +29,7 @@ impl InputPlugin for Authorizer {
     async fn handle_input_data(&self, input_data: InputData) -> Result<InputData, Error> {
         match self
             .token_validator
-            .validate(input_data.request.header().token())
+            .wrap(input_data.request.header().token())
         {
             Ok(_) => Ok(input_data),
             Err(error) => Err(error),
@@ -52,15 +53,15 @@ fn create_dummy_input_data() -> InputData {
 #[derive(Default)]
 pub struct AlwaysFailingTokenValidator {}
 
-impl TokenValidator for AlwaysFailingTokenValidator {
-    fn validate(&self, _: &str) -> Result<(), Error> {
+impl TokenWrapper for AlwaysFailingTokenValidator {
+    fn wrap(&self, _: &str) -> Result<Arc<dyn Token + Send + Sync>, Error> {
         Err(Error::new(ErrorKind::RequestError, "token is invalid"))
     }
 }
 
 #[tokio::test]
-pub async fn uses_passed_token_validator() {
-    let token_validator: Arc<dyn TokenValidator + Send + Sync> =
+pub async fn uses_passed_token_wrapper() {
+    let token_validator: Arc<dyn TokenWrapper + Send + Sync> =
         Arc::new(AlwaysFailingTokenValidator::default());
     let authorizer: Authorizer = Authorizer::new(token_validator);
     let example_input_data: InputData = create_dummy_input_data();
