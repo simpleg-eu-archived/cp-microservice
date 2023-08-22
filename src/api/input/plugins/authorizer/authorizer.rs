@@ -27,17 +27,68 @@ impl Authorizer {
 #[async_trait]
 impl InputPlugin for Authorizer {
     async fn handle_input_data(&self, input_data: InputData) -> Result<InputData, Error> {
-        match self
+        let token: Arc<dyn Token + Send + Sync> = match self
             .token_validator
             .wrap(input_data.request.header().token())
         {
-            Ok(_) => Ok(input_data),
-            Err(error) => Err(error),
+            Ok(token) => token,
+            Err(error) => return Err(error),
+        };
+
+        if !token.can_execute(input_data.request.header().action()) {
+            return Err(Error::new(
+                ErrorKind::RequestError,
+                "token has no permission to execute action",
+            ));
         }
+
+        Ok(input_data)
     }
 }
 
 #[cfg(test)]
+#[tokio::test]
+pub async fn uses_passed_token_wrapper() {
+    let token_wrapper: Arc<dyn TokenWrapper + Send + Sync> =
+        Arc::new(AlwaysFailingTokenWrapper::default());
+    let authorizer: Authorizer = Authorizer::new(token_wrapper);
+    let example_input_data: InputData = create_dummy_input_data();
+
+    let error = match timeout(
+        Duration::from_millis(200u64),
+        authorizer.handle_input_data(example_input_data),
+    )
+    .await
+    .unwrap()
+    {
+        Ok(_) => panic!("expected error"),
+        Err(error) => error,
+    };
+
+    assert_eq!(ErrorKind::RequestError, error.kind());
+}
+
+#[tokio::test]
+pub async fn fails_when_lacking_permission_for_action() {
+    let token_wrapper: Arc<dyn TokenWrapper + Send + Sync> =
+        Arc::new(NoPermissionsTokenWrapper::default());
+    let authorizer: Authorizer = Authorizer::new(token_wrapper);
+    let example_input_data: InputData = create_dummy_input_data();
+
+    let error = match timeout(
+        Duration::from_millis(200u64),
+        authorizer.handle_input_data(example_input_data),
+    )
+    .await
+    .unwrap()
+    {
+        Ok(_) => panic!("expected error"),
+        Err(error) => error,
+    };
+
+    assert_eq!(ErrorKind::RequestError, error.kind());
+}
+
 fn create_dummy_input_data() -> InputData {
     let action: String = "abcd".to_string();
     let token: String = "192JFASNI349329".to_string();
@@ -59,23 +110,20 @@ impl TokenWrapper for AlwaysFailingTokenWrapper {
     }
 }
 
-#[tokio::test]
-pub async fn uses_passed_token_wrapper() {
-    let token_wrapper: Arc<dyn TokenWrapper + Send + Sync> =
-        Arc::new(AlwaysFailingTokenWrapper::default());
-    let authorizer: Authorizer = Authorizer::new(token_wrapper);
-    let example_input_data: InputData = create_dummy_input_data();
+#[derive(Default)]
+pub struct NoPermissionsTokenWrapper {}
 
-    let error = match timeout(
-        Duration::from_millis(200u64),
-        authorizer.handle_input_data(example_input_data),
-    )
-    .await
-    .unwrap()
-    {
-        Ok(_) => panic!("expected error"),
-        Err(error) => error,
-    };
+impl TokenWrapper for NoPermissionsTokenWrapper {
+    fn wrap(&self, token: &str) -> Result<Arc<dyn Token + Send + Sync>, Error> {
+        Ok(Arc::new(NoPermissionsToken::default()))
+    }
+}
 
-    assert_eq!(ErrorKind::RequestError, error.kind());
+#[derive(Default)]
+pub struct NoPermissionsToken {}
+
+impl Token for NoPermissionsToken {
+    fn can_execute(&self, action: &str) -> bool {
+        false
+    }
 }
