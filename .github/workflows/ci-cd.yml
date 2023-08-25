@@ -52,9 +52,11 @@ jobs:
       - name: Install Python integration tests dependencies
         run: |
           python3 -m venv ./venv
+          source ./venv/bin/activate
           pip install amqp_api_client_py aio_pika
       - name: Run integration tests
         run: |
+          source ./venv/bin/activate
           chmod +x run_tests.sh
           ./run_tests.sh
         env:
