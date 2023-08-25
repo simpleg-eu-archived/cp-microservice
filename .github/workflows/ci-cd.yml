@@ -33,7 +33,7 @@ jobs:
           sleep 1
       - name: Install Python integration tests dependencies
         run: |
-          pip3 install amqp_api_client_py
+          pip3 install amqp_api_client_py aio_pika
       - name: Run integration tests
         run: |
           chmod +x run_tests.sh
