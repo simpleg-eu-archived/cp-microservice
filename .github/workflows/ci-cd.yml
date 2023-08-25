@@ -8,11 +8,27 @@ env:
   CARGO_TERM_COLOR: always
     
 jobs:
-  ci-cd:
-
+  changes:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
+    steps:
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            src:
+              - 'src/**'
+              - 'Cargo.toml'
+            test:
+              - 'integration_tests/**'
+              - 'run_tests.sh'
+  ci-cd:
+    needs: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    if: ${{ needs.changes.outputs.src == 'true' || needs.changes.outputs.test == 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
