@@ -43,7 +43,7 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
     }
 
     pub async fn run(self) {
-        for input in self.inputs {
+        for mut input in self.inputs {
             let actions_pointer = self.actions.clone();
             let logic_request_sender = self.sender.clone();
             let plugins_pointer = self.plugins.clone();
@@ -117,7 +117,7 @@ impl InputTimedImpl {
 
 #[async_trait]
 impl Input for InputTimedImpl {
-    async fn receive(&self) -> Result<InputData, Error> {
+    async fn receive(&mut self) -> Result<InputData, Error> {
         sleep(self.sleep_duration).await;
         self.sender
             .send(())
@@ -180,7 +180,7 @@ impl Default for InputDummyImpl {
 
 #[async_trait]
 impl Input for InputDummyImpl {
-    async fn receive(&self) -> Result<InputData, Error> {
+    async fn receive(&mut self) -> Result<InputData, Error> {
         if *self.has_message_been_sent.try_read().unwrap() {
             loop {
                 sleep(Duration::MAX).await;
@@ -215,7 +215,7 @@ impl DummyPlugin {
 #[async_trait]
 impl InputPlugin for DummyPlugin {
     async fn handle_input_data(&self, input_data: InputData) -> Result<InputData, Error> {
-        self.sender.send(self.send_value).await;
+        self.sender.send(self.send_value).await.unwrap();
 
         Ok(input_data)
     }
