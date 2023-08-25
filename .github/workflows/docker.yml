@@ -11,6 +11,8 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      dockerfile: ${{ steps.filter.outputs.dockerfile }}
 
     steps:
       - name: Checkout code
