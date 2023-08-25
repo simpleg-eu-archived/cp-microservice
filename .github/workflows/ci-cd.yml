@@ -35,6 +35,8 @@ jobs:
         run: |
           chmod +x run_tests.sh
           ./run_tests.sh
+        env:
+          AMQP_API_CONNECTION_URI: "amqp://guest:guest@127.0.0.1:5672"
       - name: Publish on crates.io
         run: |
           cargo login ${{ secrets.CRATES_IO_TOKEN }}
