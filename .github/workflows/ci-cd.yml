@@ -26,11 +26,23 @@ jobs:
               - 'src/**'
               - 'Cargo.toml'
             test:
+              - '.github/workflows/ci-cd.yml'
               - 'integration_tests/**'
               - 'run_tests.sh'
   ci-cd:
     needs: changes
     runs-on: ubuntu-latest
+
+    container: gabriel0simpleg/cp-microservice:main
+    services:
+      rabbitmq:
+        image: rabbitmq:3.12
+        env:
+          RABBITMQ_DEFAULT_USER: guest
+          RABBITMQ_DEFAULT_PASS: guest
+        ports:
+          - 5672:5672
+          
     timeout-minutes: 10
 
     if: ${{ needs.changes.outputs.src == 'true' || needs.changes.outputs.test == 'true' }}
@@ -48,10 +60,6 @@ jobs:
         run: cargo build --release --verbose
       - name: Run unit tests
         run: cargo test --verbose
-      - name: Start RabbitMQ
-        run: |
-          docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.12-management &
-          sleep 6
       - name: Install Python integration tests dependencies
         run: |
           pip3 install amqp_api_client_py aio_pika
