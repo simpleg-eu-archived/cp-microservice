@@ -1,5 +1,7 @@
 use std::time::Duration;
+
 use tokio::time::sleep;
+
 use cp_microservice::process::PROCESS;
 use cp_microservice::process_request::ProcessRequest;
 
@@ -9,14 +11,14 @@ use cp_microservice::process_request::ProcessRequest;
 #[tokio::main]
 pub async fn main() {
     tokio::spawn(async {
-       sleep(Duration::from_secs(5)).await;
+        sleep(Duration::from_secs(5)).await;
     });
 
     tokio::spawn(async {
         sleep(Duration::from_secs(3)).await;
     });
 
-    PROCESS.sender().send(ProcessRequest::STOP).await;
+    PROCESS.sender().send(ProcessRequest::STOP).await.unwrap();
 
     sleep(Duration::from_secs(8)).await;
 }
