@@ -33,7 +33,7 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
 
-    container: gabriel0simpleg/cp-microservice:main
+    container: rust:1.72.0
     services:
       rabbitmq:
         image: rabbitmq:3.12
@@ -51,7 +51,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Install Python integration tests dependencies
         run: |
-          python3 -m pip3 install --upgrade pip3
+          apt-get install python3 python3-pip
           pip3 install amqp_api_client_py aio_pika
       - name: Run integration tests
         run: |
