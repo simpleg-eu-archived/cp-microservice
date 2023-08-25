@@ -11,6 +11,9 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      src: ${{ steps.filter.outputs.src }}
+      test: ${{ steps.filter.outputs.test }}
 
     steps:
       - name: Checkout code
