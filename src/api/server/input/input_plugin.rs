@@ -1,6 +1,6 @@
+use crate::api::server::input::input_data::InputData;
 use async_trait::async_trait;
 
-use crate::api::input::input_data::InputData;
 use crate::error::Error;
 
 #[async_trait]

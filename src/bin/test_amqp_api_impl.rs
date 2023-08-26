@@ -10,12 +10,12 @@ use multiple_connections_lapin_wrapper::amqp_wrapper::AmqpWrapper;
 use multiple_connections_lapin_wrapper::config::amqp_connect_config::AmqpConnectConfig;
 use serde_json::Value;
 
-use cp_microservice::api::async_callback::AsyncCallback;
-use cp_microservice::api::dispatch::Dispatch;
-use cp_microservice::api::input::input_plugin::InputPlugin;
-use cp_microservice::api::input::request::Request;
+use cp_microservice::api::server::async_callback::AsyncCallback;
+use cp_microservice::api::server::dispatch::Dispatch;
+use cp_microservice::api::server::input::input_plugin::InputPlugin;
+use cp_microservice::api::shared::request::Request;
 use cp_microservice::error::Error;
-use cp_microservice::r#impl::api::amqp_input::AmqpInput;
+use cp_microservice::r#impl::api::server::input::amqp_input::AmqpInput;
 
 const ALIVE_TIME_IN_MILLISECONDS: u64 = 3000u64;
 

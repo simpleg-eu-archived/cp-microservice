@@ -9,10 +9,10 @@ use lapin::types::ShortString;
 use lapin::{BasicProperties, Channel, Consumer};
 use uuid::Uuid;
 
-use crate::api::input::input::Input;
-use crate::api::input::input_data::InputData;
-use crate::api::input::replier::Replier;
-use crate::api::input::request::Request;
+use crate::api::server::input::input::Input;
+use crate::api::server::input::input_data::InputData;
+use crate::api::server::input::replier::Replier;
+use crate::api::shared::request::Request;
 use crate::error::{Error, ErrorKind};
 
 pub struct AmqpInput {
@@ -168,6 +168,10 @@ impl Input for AmqpInput {
                     .await);
             }
         };
+
+        if let Err(error) = delivery.ack(self.ack_options).await {
+            log::warn!("failed to acknowledge delivery: {}", error);
+        }
 
         let channel = self.channel.clone();
         let properties: BasicProperties = delivery.properties;

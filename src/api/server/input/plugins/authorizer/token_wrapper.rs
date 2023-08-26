@@ -1,6 +1,6 @@
+use crate::api::server::input::plugins::authorizer::token::Token;
 use std::sync::Arc;
 
-use crate::api::input::plugins::authorizer::token::Token;
 use crate::error::Error;
 
 pub trait TokenWrapper {

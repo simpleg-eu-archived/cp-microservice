@@ -5,7 +5,7 @@ use std::sync::Arc;
 use async_channel::Sender;
 use serde_json::Value;
 
-use crate::api::input::request::Request;
+use crate::api::shared::request::Request;
 use crate::error::Error;
 
 pub type AsyncCallback<LogicRequestType> = Arc<

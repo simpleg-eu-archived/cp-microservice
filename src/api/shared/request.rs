@@ -1,7 +1,6 @@
+use crate::api::shared::request_header::RequestHeader;
 use serde::Deserialize;
 use serde_json::Value;
-
-use crate::api::input::request_header::RequestHeader;
 
 #[derive(Deserialize)]
 pub struct Request {

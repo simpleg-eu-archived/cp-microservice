@@ -1,17 +1,17 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::api::server::input::input_data::InputData;
+use crate::api::server::input::input_plugin::InputPlugin;
+use crate::api::server::input::plugins::authorizer::token::Token;
+use crate::api::server::input::plugins::authorizer::token_wrapper::TokenWrapper;
+use crate::api::server::input::replier::Replier;
+use crate::api::shared::request::Request;
+use crate::api::shared::request_header::RequestHeader;
 use async_trait::async_trait;
 use serde_json::Value;
 use tokio::time::timeout;
 
-use crate::api::input::input_data::InputData;
-use crate::api::input::input_plugin::InputPlugin;
-use crate::api::input::plugins::authorizer::token::Token;
-use crate::api::input::plugins::authorizer::token_wrapper::TokenWrapper;
-use crate::api::input::replier::Replier;
-use crate::api::input::request::Request;
-use crate::api::input::request_header::RequestHeader;
 use crate::error::{Error, ErrorKind};
 
 pub struct Authorizer {

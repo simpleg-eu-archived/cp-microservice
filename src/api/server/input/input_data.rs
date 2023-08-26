@@ -1,4 +1,5 @@
-use crate::api::input::{replier::Replier, request::Request};
+use crate::api::server::input::replier::Replier;
+use crate::api::shared::request::Request;
 
 pub struct InputData {
     pub request: Request,
