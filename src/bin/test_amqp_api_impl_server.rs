@@ -21,17 +21,14 @@ const ALIVE_TIME_IN_MILLISECONDS: u64 = 600000u64;
 
 #[tokio::main]
 pub async fn main() {
-    let amqp_connection_json: &str = r#"{
-                            "uri": "amqp://guest:guest@127.0.0.1:5672",
-                            "options": {
-                                "locale": "en_US",
-                                "client_properties": {}
-                            },
-                            "owned_tls_config": {}
-                        }"#;
+    let amqp_connection_uri = std::env::args()
+        .nth(1usize)
+        .expect("expected amqp connection uri");
+
+    let amqp_connection_json: String = format!("{{ \"uri\": \"{}\", \"options\": {{ \"locale\": \"en_US\", \"client_properties\": {{}} }},\"owned_tls_config\": {{}} }}", amqp_connection_uri);
 
     let connection_config: AmqpConnectConfig =
-        serde_json::from_str(amqp_connection_json).expect("expected connection config");
+        serde_json::from_str(amqp_connection_json.as_str()).expect("expected connection config");
     let mut wrapper: AmqpWrapper = AmqpWrapper::try_new(connection_config)
         .expect("expected amqp wrapper from connection config");
 
