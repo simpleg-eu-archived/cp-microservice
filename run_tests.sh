@@ -15,6 +15,8 @@ cd ./target/debug
 
 result_exit_code=0
 
+# INTEGRATION TESTS
+
 # TEST EXIT, EXPECTED EXIT CODE: 1
 ./test_exit
 
@@ -48,16 +50,14 @@ else
   result_exit_code=1
 fi
 
-# INTEGRATION TESTS
-
 cd ../../
 
 # TEST AMQP API IMPL, EXPECTED EXIT CODE: 0
-./target/debug/test_amqp_api_impl &
+./target/debug/test_amqp_api_impl_server &
 impl_pid=$!
 
 sleep 1
-python3 integration_tests/test_amqp_api_impl.py
+./target/debug/test_amqp_api_impl_client
 
 test_amqp_api_impl_code=$?
 if [ $test_amqp_api_impl_code -eq 0 ]; then

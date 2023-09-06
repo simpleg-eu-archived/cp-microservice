@@ -3,7 +3,6 @@ use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
 
-use amqp_api_shared::amqp_queue_consumer::AmqpQueueConsumer;
 use async_channel::Sender;
 use lapin::Channel;
 use multiple_connections_lapin_wrapper::amqp_wrapper::AmqpWrapper;
@@ -16,8 +15,9 @@ use cp_microservice::api::server::input::input_plugin::InputPlugin;
 use cp_microservice::api::shared::request::Request;
 use cp_microservice::error::Error;
 use cp_microservice::r#impl::api::server::input::amqp_input::AmqpInput;
+use cp_microservice::r#impl::api::shared::amqp_queue_consumer::AmqpQueueConsumer;
 
-const ALIVE_TIME_IN_MILLISECONDS: u64 = 3000u64;
+const ALIVE_TIME_IN_MILLISECONDS: u64 = 600000u64;
 
 #[tokio::main]
 pub async fn main() {

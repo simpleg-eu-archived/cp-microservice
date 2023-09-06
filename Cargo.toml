@@ -9,7 +9,6 @@ description = "Template for Cuplan's microservices"
 
 [dependencies]
 
-amqp-api-shared = "0.1.1"
 multiple-connections-lapin-wrapper = "0.1.0"
 
 async-channel = "1.9"

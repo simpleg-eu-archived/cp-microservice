@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use amqp_api_shared::amqp_queue_consumer::AmqpQueueConsumer;
 use async_trait::async_trait;
 use futures_util::TryStreamExt;
 use lapin::message::Delivery;
@@ -14,6 +13,7 @@ use crate::api::server::input::input_data::InputData;
 use crate::api::server::input::replier::Replier;
 use crate::api::shared::request::Request;
 use crate::error::{Error, ErrorKind};
+use crate::r#impl::api::shared::amqp_queue_consumer::AmqpQueueConsumer;
 
 pub struct AmqpInput {
     channel: Arc<Channel>,

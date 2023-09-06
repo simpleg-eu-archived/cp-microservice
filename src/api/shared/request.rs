@@ -1,8 +1,9 @@
-use crate::api::shared::request_header::RequestHeader;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Deserialize)]
+use crate::api::shared::request_header::RequestHeader;
+
+#[derive(Deserialize, Serialize)]
 pub struct Request {
     header: RequestHeader,
     payload: Value,
