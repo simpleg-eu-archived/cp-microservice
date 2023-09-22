@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::api::server::async_callback::AsyncCallback;
+use crate::api::server::action::Action;
 use crate::api::server::input::input::Input;
 use crate::api::server::input::input_data::InputData;
 use crate::api::server::input::input_plugin::InputPlugin;
@@ -20,7 +20,7 @@ use crate::error::Error;
 
 pub struct Dispatch<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send> {
     inputs: Vec<InputImpl>,
-    actions: Arc<HashMap<String, AsyncCallback<LogicRequestType>>>,
+    actions: Arc<HashMap<String, Action<LogicRequestType>>>,
     sender: Sender<LogicRequestType>,
     plugins: Arc<Vec<Arc<dyn InputPlugin + Send + Sync>>>,
 }
@@ -30,7 +30,7 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
 {
     pub fn new(
         inputs: Vec<InputImpl>,
-        actions: HashMap<String, AsyncCallback<LogicRequestType>>,
+        actions: HashMap<String, Action<LogicRequestType>>,
         sender: Sender<LogicRequestType>,
         plugins: Vec<Arc<dyn InputPlugin + Send + Sync>>,
     ) -> Dispatch<InputImpl, LogicRequestType> {
@@ -78,7 +78,7 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
 
 async fn handle_input_data<LogicRequestType: 'static + Send>(
     input_data: InputData,
-    actions: &Arc<HashMap<String, AsyncCallback<LogicRequestType>>>,
+    actions: &Arc<HashMap<String, Action<LogicRequestType>>>,
     sender: Sender<LogicRequestType>,
 ) {
     let action = input_data.request.header().action();

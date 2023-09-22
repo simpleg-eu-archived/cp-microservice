@@ -8,7 +8,7 @@ use serde_json::Value;
 use crate::api::shared::request::Request;
 use crate::error::Error;
 
-pub type AsyncCallback<LogicRequestType> = Arc<
+pub type Action<LogicRequestType> = Arc<
     dyn Fn(
             Request,
             Sender<LogicRequestType>,
