@@ -9,7 +9,7 @@ use crate::api::server::input::plugins::token_manager::token::Token;
 use crate::api::server::input::plugins::token_manager::token_manager_plugin::TokenManagerPlugin;
 use crate::error::{Error, ErrorKind};
 
-const USER_ID_KEY: &str = "user_id";
+pub const USER_ID_KEY: &str = "user_id";
 
 #[derive(Default)]
 pub struct Authenticator {}
