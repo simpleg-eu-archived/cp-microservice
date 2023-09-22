@@ -18,6 +18,10 @@ impl Request {
         &self.header
     }
 
+    pub fn mut_header(&mut self) -> &mut RequestHeader {
+        &mut self.header
+    }
+
     pub fn payload(&self) -> &Value {
         &self.payload
     }
