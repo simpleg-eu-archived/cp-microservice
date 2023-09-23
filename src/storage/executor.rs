@@ -4,8 +4,11 @@ use std::sync::Arc;
 
 use crate::error::Error;
 
-pub type Executor<StorageRequestType> = Arc<
-    dyn Fn(StorageRequestType) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + Sync>>
+pub type Executor<StorageConnectionType, StorageRequestType> = Arc<
+    dyn Fn(
+            StorageConnectionType,
+            StorageRequestType,
+        ) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + Sync>>
         + Send
         + Sync,
 >;

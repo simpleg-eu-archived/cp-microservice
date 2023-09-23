@@ -14,13 +14,13 @@ use crate::storage::executor::Executor;
 
 pub struct Dispatch<StorageRequestType: Debug> {
     receiver: Receiver<StorageRequestType>,
-    executors: HashMap<Discriminant<StorageRequestType>, Executor<StorageRequestType>>,
+    executors: HashMap<Discriminant<StorageRequestType>, Executor<(), StorageRequestType>>,
 }
 
 impl<StorageRequestType: Debug> Dispatch<StorageRequestType> {
     pub fn new(
         receiver: Receiver<StorageRequestType>,
-        executors: HashMap<Discriminant<StorageRequestType>, Executor<StorageRequestType>>,
+        executors: HashMap<Discriminant<StorageRequestType>, Executor<(), StorageRequestType>>,
     ) -> Dispatch<StorageRequestType> {
         Dispatch {
             receiver,
@@ -49,7 +49,7 @@ impl<StorageRequestType: Debug> Dispatch<StorageRequestType> {
                 }
             };
 
-            if let Err(error) = executor(storage_request).await {
+            if let Err(error) = executor((), storage_request).await {
                 info!("storage executor returned error: {}", error);
             }
         }
@@ -76,9 +76,9 @@ pub enum StorageRequest {
 pub async fn run_expected_executor() {
     const TEST_MESSAGE: &str = "test";
     let (dummy_sender, _) = tokio::sync::oneshot::channel::<String>();
-    let executor: Executor<StorageRequest> =
-        Arc::new(|storage_request| Box::pin(dummy_executor(storage_request)));
-    let executors: HashMap<Discriminant<StorageRequest>, Executor<StorageRequest>> =
+    let executor: Executor<(), StorageRequest> =
+        Arc::new(|storage_connection, storage_request| Box::pin(dummy_executor(storage_request)));
+    let executors: HashMap<Discriminant<StorageRequest>, Executor<(), StorageRequest>> =
         HashMap::from([(
             mem::discriminant(&StorageRequest::DummyElement("".to_string(), dummy_sender)),
             executor,
