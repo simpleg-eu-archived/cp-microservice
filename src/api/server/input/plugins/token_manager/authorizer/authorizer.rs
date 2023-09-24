@@ -18,11 +18,14 @@ impl TokenManagerPlugin for Authorizer {
         &self,
         input_data: InputData,
         token: Arc<dyn Token + Send + Sync>,
-    ) -> Result<InputData, Error> {
+    ) -> Result<InputData, (InputData, Error)> {
         if !token.can_execute(input_data.request.header().action()) {
-            return Err(Error::new(
-                ErrorKind::RequestError,
-                "token has no permission to execute action",
+            return Err((
+                input_data,
+                Error::new(
+                    ErrorKind::RequestError,
+                    "token has no permission to execute action",
+                ),
             ));
         }
 
@@ -49,7 +52,7 @@ pub async fn fails_when_lacking_permission_for_action() {
     .unwrap()
     {
         Ok(_) => panic!("expected error"),
-        Err(error) => error,
+        Err((input_data, error)) => error,
     };
 
     assert_eq!(ErrorKind::RequestError, error.kind());

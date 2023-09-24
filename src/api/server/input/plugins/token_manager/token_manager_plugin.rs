@@ -12,5 +12,5 @@ pub trait TokenManagerPlugin {
         &self,
         input_data: InputData,
         token: Arc<dyn Token + Send + Sync>,
-    ) -> Result<InputData, Error>;
+    ) -> Result<InputData, (InputData, Error)>;
 }

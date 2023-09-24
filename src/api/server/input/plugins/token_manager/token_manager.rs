@@ -15,6 +15,8 @@ use crate::api::shared::request::Request;
 use crate::api::shared::request_header::RequestHeader;
 use crate::error::{Error, ErrorKind};
 
+pub const TOKEN_MANAGER_PLUGIN_ID: &str = "token_manager";
+
 pub struct TokenManager {
     token_wrapper: Arc<dyn TokenWrapper + Send + Sync>,
     authorizer: Arc<dyn TokenManagerPlugin + Send + Sync>,
@@ -38,14 +40,17 @@ impl TokenManager {
 #[async_trait]
 impl InputPlugin for TokenManager {
     fn id(&self) -> &str {
-        "token_manager"
+        TOKEN_MANAGER_PLUGIN_ID
     }
 
-    async fn handle_input_data(&self, mut input_data: InputData) -> Result<InputData, Error> {
+    async fn handle_input_data(
+        &self,
+        mut input_data: InputData,
+    ) -> Result<InputData, (InputData, Error)> {
         let token: Arc<dyn Token + Send + Sync> =
             match self.token_wrapper.wrap(input_data.request.header().token()) {
                 Ok(token) => token,
-                Err(error) => return Err(error),
+                Err(error) => return Err((input_data, error)),
             };
 
         input_data = match self
@@ -54,7 +59,7 @@ impl InputPlugin for TokenManager {
             .await
         {
             Ok(input_data) => input_data,
-            Err(error) => return Err(error),
+            Err((input_data, error)) => return Err((input_data, error)),
         };
 
         input_data = match self
@@ -63,7 +68,7 @@ impl InputPlugin for TokenManager {
             .await
         {
             Ok(input_data) => input_data,
-            Err(error) => return Err(error),
+            Err((input_data, error)) => return Err((input_data, error)),
         };
 
         Ok(input_data)
@@ -87,7 +92,7 @@ pub async fn error_when_token_wrapper_fails() {
 
     match token_manager.handle_input_data(dummy_input_data).await {
         Ok(_) => panic!("expected 'Err' got 'Ok'"),
-        Err(error) => assert_eq!(ErrorKind::ApiError, error.kind),
+        Err((input_data, error)) => assert_eq!(ErrorKind::ApiError, error.kind),
     }
 }
 
@@ -105,7 +110,7 @@ pub async fn error_when_token_authorization_fails() {
 
     match token_manager.handle_input_data(dummy_input_data).await {
         Ok(_) => panic!("expected 'Err' got 'Ok'"),
-        Err(error) => assert_eq!(ErrorKind::RequestError, error.kind),
+        Err((input_data, error)) => assert_eq!(ErrorKind::RequestError, error.kind),
     }
 }
 
@@ -123,7 +128,7 @@ pub async fn error_when_token_has_no_user_id() {
 
     match token_manager.handle_input_data(dummy_input_data).await {
         Ok(_) => panic!("expected 'Err' got 'Ok'"),
-        Err(error) => {
+        Err((input_data, error)) => {
             assert_eq!(ErrorKind::RequestError, error.kind);
             assert_eq!("token contains no 'user_id'".to_string(), error.message)
         }

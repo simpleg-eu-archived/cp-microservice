@@ -20,7 +20,7 @@ impl TokenManagerPlugin for Authenticator {
         &self,
         mut input_data: InputData,
         token: Arc<dyn Token + Send + Sync>,
-    ) -> Result<InputData, Error> {
+    ) -> Result<InputData, (InputData, Error)> {
         let user_id = token.user_id();
 
         input_data
@@ -51,7 +51,7 @@ pub async fn error_if_user_id_is_missing() {
     .unwrap()
     {
         Ok(_) => panic!("expected 'Err' got 'Ok'"),
-        Err(error) => assert_eq!(ErrorKind::RequestError, error.kind),
+        Err((input_data, error)) => assert_eq!(ErrorKind::RequestError, error.kind),
     }
 }
 
@@ -70,7 +70,7 @@ pub async fn embed_user_id_into_header() {
     .unwrap()
     {
         Ok(input_data) => input_data,
-        Err(error) => panic!("expected 'Ok' got an 'Err': {}", error),
+        Err((input_data, error)) => panic!("expected 'Ok' got an 'Err': {}", error),
     };
 
     assert!(result.request.header().has_extra(&USER_ID_KEY.to_string()));
