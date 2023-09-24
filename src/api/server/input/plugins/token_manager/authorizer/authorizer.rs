@@ -82,7 +82,7 @@ impl Token for NoPermissionsToken {
         false
     }
 
-    fn user_id(&self) -> Option<String> {
+    fn user_id(&self) -> &str {
         todo!()
     }
 }
@@ -95,7 +95,7 @@ impl Token for AllPermissionsToken {
         true
     }
 
-    fn user_id(&self) -> Option<String> {
+    fn user_id(&self) -> &str {
         todo!()
     }
 }

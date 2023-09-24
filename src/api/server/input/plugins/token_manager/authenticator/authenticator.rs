@@ -21,20 +21,12 @@ impl TokenManagerPlugin for Authenticator {
         mut input_data: InputData,
         token: Arc<dyn Token + Send + Sync>,
     ) -> Result<InputData, Error> {
-        let user_id = match token.user_id() {
-            Some(user_id) => user_id,
-            None => {
-                return Err(Error::new(
-                    ErrorKind::RequestError,
-                    "token contains no 'user_id'",
-                ))
-            }
-        };
+        let user_id = token.user_id();
 
         input_data
             .request
             .mut_header()
-            .add_extra(USER_ID_KEY.to_string(), user_id);
+            .add_extra(USER_ID_KEY.to_string(), user_id.to_string());
 
         Ok(input_data)
     }
@@ -92,8 +84,8 @@ impl Token for NoUserIdToken {
         todo!()
     }
 
-    fn user_id(&self) -> Option<String> {
-        None
+    fn user_id(&self) -> &str {
+        ""
     }
 }
 
@@ -105,7 +97,7 @@ impl Token for TokenWithUserId {
         todo!()
     }
 
-    fn user_id(&self) -> Option<String> {
-        Some("123".to_string())
+    fn user_id(&self) -> &str {
+        "123"
     }
 }
