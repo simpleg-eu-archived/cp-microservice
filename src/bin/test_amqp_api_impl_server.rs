@@ -78,7 +78,7 @@ pub async fn main() {
     let amqp_queue_consumer: AmqpQueueConsumer =
         serde_json::from_str(amqp_queue_consumer_json).expect("expected amqp queue consumer");
 
-    let amqp_input: AmqpInput = AmqpInput::try_new(channel, amqp_queue_consumer)
+    let amqp_input: AmqpInput = AmqpInput::try_new(channel, amqp_queue_consumer, Vec::new())
         .await
         .unwrap();
     let inputs = vec![amqp_input];
