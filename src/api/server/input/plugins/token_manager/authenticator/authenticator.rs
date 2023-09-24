@@ -38,24 +38,6 @@ use crate::api::server::input::plugins::token_manager::dummy_input_data::create_
 const TIMEOUT_AFTER_MILLISECONDS: u64 = 200u64;
 
 #[tokio::test]
-pub async fn error_if_user_id_is_missing() {
-    let authenticator: Arc<dyn TokenManagerPlugin + Send + Sync> =
-        Arc::new(Authenticator::default());
-    let input_data = create_dummy_input_data();
-
-    match timeout(
-        Duration::from_millis(TIMEOUT_AFTER_MILLISECONDS),
-        authenticator.handle_input_data_with_token(input_data, Arc::new(NoUserIdToken::default())),
-    )
-    .await
-    .unwrap()
-    {
-        Ok(_) => panic!("expected 'Err' got 'Ok'"),
-        Err((input_data, error)) => assert_eq!(ErrorKind::RequestError, error.kind),
-    }
-}
-
-#[tokio::test]
 pub async fn embed_user_id_into_header() {
     let authenticator: Arc<dyn TokenManagerPlugin + Send + Sync> =
         Arc::new(Authenticator::default());

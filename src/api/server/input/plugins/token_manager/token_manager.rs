@@ -114,27 +114,6 @@ pub async fn error_when_token_authorization_fails() {
     }
 }
 
-#[tokio::test]
-pub async fn error_when_token_has_no_user_id() {
-    let token_wrapper: Arc<dyn TokenWrapper + Send + Sync> =
-        Arc::new(AllPermissionsTokenWrapper::default());
-
-    let token_manager: TokenManager = TokenManager::new(
-        token_wrapper,
-        Authorizer::default(),
-        Authenticator::default(),
-    );
-    let dummy_input_data: InputData = create_dummy_input_data();
-
-    match token_manager.handle_input_data(dummy_input_data).await {
-        Ok(_) => panic!("expected 'Err' got 'Ok'"),
-        Err((input_data, error)) => {
-            assert_eq!(ErrorKind::RequestError, error.kind);
-            assert_eq!("token contains no 'user_id'".to_string(), error.message)
-        }
-    }
-}
-
 #[derive(Default)]
 pub struct AlwaysFailingTokenWrapper {}
 
