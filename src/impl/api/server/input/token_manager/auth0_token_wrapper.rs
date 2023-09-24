@@ -21,6 +21,15 @@ pub struct Auth0TokenWrapper {
     open_id_connect_config: OpenIdConnectConfig,
 }
 
+impl Auth0TokenWrapper {
+    pub fn new(jwks: JwkSet, open_id_connect_config: OpenIdConnectConfig) -> Self {
+        Self {
+            jwks,
+            open_id_connect_config,
+        }
+    }
+}
+
 impl TokenWrapper for Auth0TokenWrapper {
     fn wrap(&self, token: &str) -> Result<Arc<dyn Token + Send + Sync>, Error> {
         let header = match decode_header(token) {
@@ -102,4 +111,26 @@ impl TokenWrapper for Auth0TokenWrapper {
         let token = JsonWebToken::try_new(decoded_token)?;
         Ok(Arc::new(token))
     }
+}
+
+pub async fn try_get_jwks(jwks_uri: &str) -> Result<JwkSet, Error> {
+    let jwks = match reqwest::get(jwks_uri).await {
+        Ok(response) => match response.json::<JwkSet>().await {
+            Ok(jwks) => jwks,
+            Err(error) => {
+                return Err(Error::new(
+                    ErrorKind::ApiError,
+                    format!("failed to deserialize response as JwkSet: {}", error),
+                ));
+            }
+        },
+        Err(error) => {
+            return Err(Error::new(
+                ErrorKind::ApiError,
+                format!("failed to request jwks: {}", error),
+            ));
+        }
+    };
+
+    Ok(jwks)
 }
