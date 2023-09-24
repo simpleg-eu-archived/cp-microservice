@@ -51,20 +51,29 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
             tokio::spawn(async move {
                 loop {
                     let result = input.receive();
-                    let sender = logic_request_sender.clone();
 
                     match result.await {
                         Ok(mut input_data) => {
-                            for plugin in plugins_pointer.as_slice() {
-                                input_data = plugin.handle_input_data(input_data).await.unwrap();
-                            }
+                            for (index, plugin) in plugins_pointer.as_slice().iter().enumerate() {
+                                input_data = match plugin.handle_input_data(input_data).await {
+                                    Ok(data) => data,
+                                    Err(error) => {
+                                        warn!("plugin failed to handle input data: {}", error);
+                                        break;
+                                    }
+                                };
 
-                            handle_input_data::<LogicRequestType>(
-                                input_data,
-                                &actions_pointer,
-                                sender,
-                            )
-                            .await;
+                                if index == plugins_pointer.len() - 1 {
+                                    handle_input_data::<LogicRequestType>(
+                                        input_data,
+                                        &actions_pointer,
+                                        logic_request_sender.clone(),
+                                    )
+                                    .await;
+
+                                    break;
+                                }
+                            }
                         }
                         Err(error) => {
                             warn!("failed to receive input: {}", error);
