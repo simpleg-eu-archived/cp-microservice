@@ -22,3 +22,5 @@ Cargo.lock
 *.iml
 .idea
 .vscode
+
+**/.DS_Store
