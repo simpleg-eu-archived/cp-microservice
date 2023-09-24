@@ -37,6 +37,10 @@ impl TokenManager {
 
 #[async_trait]
 impl InputPlugin for TokenManager {
+    fn id(&self) -> &str {
+        "token_manager"
+    }
+
     async fn handle_input_data(&self, mut input_data: InputData) -> Result<InputData, Error> {
         let token: Arc<dyn Token + Send + Sync> =
             match self.token_wrapper.wrap(input_data.request.header().token()) {

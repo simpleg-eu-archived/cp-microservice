@@ -7,4 +7,5 @@ use crate::error::Error;
 #[async_trait::async_trait]
 pub trait Input {
     async fn receive(&mut self) -> Result<InputData, Error>;
+    fn filter_out_plugins(&self) -> &[&str];
 }

@@ -55,6 +55,10 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
                     match result.await {
                         Ok(mut input_data) => {
                             for (index, plugin) in plugins_pointer.as_slice().iter().enumerate() {
+                                if input.filter_out_plugins().contains(&plugin.id()) {
+                                    continue;
+                                }
+
                                 input_data = match plugin.handle_input_data(input_data).await {
                                     Ok(data) => data,
                                     Err(error) => {
@@ -141,6 +145,10 @@ impl Input for InputTimedImpl {
             replier: Arc::new(move |value: Value| Box::pin(async { Ok(()) })),
         })
     }
+
+    fn filter_out_plugins(&self) -> &[&str] {
+        &[]
+    }
 }
 
 #[tokio::test]
@@ -208,6 +216,10 @@ impl Input for InputDummyImpl {
 
         Ok(InputData { request, replier })
     }
+
+    fn filter_out_plugins(&self) -> &[&str] {
+        &[]
+    }
 }
 
 pub struct DummyPlugin {
@@ -223,6 +235,10 @@ impl DummyPlugin {
 
 #[async_trait]
 impl InputPlugin for DummyPlugin {
+    fn id(&self) -> &str {
+        "dummy"
+    }
+
     async fn handle_input_data(&self, input_data: InputData) -> Result<InputData, Error> {
         self.sender.send(self.send_value).await.unwrap();
 
