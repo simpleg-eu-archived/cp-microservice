@@ -52,7 +52,7 @@ pub async fn fails_when_lacking_permission_for_action() {
     .unwrap()
     {
         Ok(_) => panic!("expected error"),
-        Err((input_data, error)) => error,
+        Err((_input_data, error)) => error,
     };
 
     assert_eq!(ErrorKind::RequestError, error.kind());
@@ -73,7 +73,7 @@ pub async fn succeeds_when_can_execute_action() {
     .unwrap()
     {
         Ok(_) => (),
-        Err(_error) => panic!("expected 'Ok' for 'handle_input_data_with_token'."),
+        Err((_input_data, _error)) => panic!("expected 'Ok' for 'handle_input_data_with_token'."),
     };
 }
 

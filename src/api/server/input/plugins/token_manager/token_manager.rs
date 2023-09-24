@@ -92,7 +92,7 @@ pub async fn error_when_token_wrapper_fails() {
 
     match token_manager.handle_input_data(dummy_input_data).await {
         Ok(_) => panic!("expected 'Err' got 'Ok'"),
-        Err((input_data, error)) => assert_eq!(ErrorKind::ApiError, error.kind),
+        Err((_input_data, error)) => assert_eq!(ErrorKind::ApiError, error.kind),
     }
 }
 
@@ -110,7 +110,7 @@ pub async fn error_when_token_authorization_fails() {
 
     match token_manager.handle_input_data(dummy_input_data).await {
         Ok(_) => panic!("expected 'Err' got 'Ok'"),
-        Err((input_data, error)) => assert_eq!(ErrorKind::RequestError, error.kind),
+        Err((_input_data, error)) => assert_eq!(ErrorKind::RequestError, error.kind),
     }
 }
 
@@ -118,7 +118,7 @@ pub async fn error_when_token_authorization_fails() {
 pub struct AlwaysFailingTokenWrapper {}
 
 impl TokenWrapper for AlwaysFailingTokenWrapper {
-    fn wrap(&self, token: &str) -> Result<Arc<dyn Token + Send + Sync>, Error> {
+    fn wrap(&self, _token: &str) -> Result<Arc<dyn Token + Send + Sync>, Error> {
         Err(Error::new(
             ErrorKind::ApiError,
             "failed to initialize token",
@@ -130,7 +130,7 @@ impl TokenWrapper for AlwaysFailingTokenWrapper {
 pub struct NoPermissionTokenWrapper {}
 
 impl TokenWrapper for NoPermissionTokenWrapper {
-    fn wrap(&self, token: &str) -> Result<Arc<dyn Token + Send + Sync>, Error> {
+    fn wrap(&self, _token: &str) -> Result<Arc<dyn Token + Send + Sync>, Error> {
         Ok(Arc::new(NoPermissionToken::default()))
     }
 }
@@ -139,7 +139,7 @@ impl TokenWrapper for NoPermissionTokenWrapper {
 pub struct NoPermissionToken {}
 
 impl Token for NoPermissionToken {
-    fn can_execute(&self, action: &str) -> bool {
+    fn can_execute(&self, _action: &str) -> bool {
         false
     }
 
@@ -152,7 +152,7 @@ impl Token for NoPermissionToken {
 pub struct AllPermissionsTokenWrapper {}
 
 impl TokenWrapper for AllPermissionsTokenWrapper {
-    fn wrap(&self, token: &str) -> Result<Arc<dyn Token + Send + Sync>, Error> {
+    fn wrap(&self, _token: &str) -> Result<Arc<dyn Token + Send + Sync>, Error> {
         Ok(Arc::new(AllPermissionsToken::default()))
     }
 }
@@ -161,7 +161,7 @@ impl TokenWrapper for AllPermissionsTokenWrapper {
 pub struct AllPermissionsToken {}
 
 impl Token for AllPermissionsToken {
-    fn can_execute(&self, action: &str) -> bool {
+    fn can_execute(&self, _action: &str) -> bool {
         true
     }
 

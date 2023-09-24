@@ -65,7 +65,7 @@ impl<LogicRequestType: Debug, StorageRequestType> Dispatch<LogicRequestType, Sto
 
 #[cfg(test)]
 async fn dummy_executor(
-    value: LogicRequest,
+    _value: LogicRequest,
     storage_sender: Sender<StorageRequest>,
 ) -> Result<(), Error> {
     storage_sender

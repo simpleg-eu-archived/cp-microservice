@@ -52,7 +52,7 @@ pub async fn embed_user_id_into_header() {
     .unwrap()
     {
         Ok(input_data) => input_data,
-        Err((input_data, error)) => panic!("expected 'Ok' got an 'Err': {}", error),
+        Err((_input_data, error)) => panic!("expected 'Ok' got an 'Err': {}", error),
     };
 
     assert!(result.request.header().has_extra(&USER_ID_KEY.to_string()));
@@ -62,7 +62,7 @@ pub async fn embed_user_id_into_header() {
 pub struct NoUserIdToken {}
 
 impl Token for NoUserIdToken {
-    fn can_execute(&self, action: &str) -> bool {
+    fn can_execute(&self, _action: &str) -> bool {
         todo!()
     }
 
@@ -75,7 +75,7 @@ impl Token for NoUserIdToken {
 pub struct TokenWithUserId {}
 
 impl Token for TokenWithUserId {
-    fn can_execute(&self, action: &str) -> bool {
+    fn can_execute(&self, _action: &str) -> bool {
         todo!()
     }
 
