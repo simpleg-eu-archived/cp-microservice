@@ -16,7 +16,7 @@ use serde_json::{json, Value};
 use tokio::sync::RwLock;
 use tokio::time::{sleep, timeout};
 
-use crate::error::Error;
+use crate::core::error::Error;
 
 pub struct Dispatch<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send> {
     inputs: Vec<InputImpl>,

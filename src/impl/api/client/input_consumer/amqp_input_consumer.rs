@@ -10,7 +10,7 @@ use tokio::time::timeout;
 
 use crate::api::client::input_consumer::input_consumer::InputConsumer;
 use crate::api::shared::request::Request;
-use crate::error::{Error, ErrorKind};
+use crate::core::error::{Error, ErrorKind};
 use crate::r#impl::api::shared::amqp_queue_rpc_publisher::AmqpQueueRpcPublisher;
 
 pub struct AmqpInputConsumer {

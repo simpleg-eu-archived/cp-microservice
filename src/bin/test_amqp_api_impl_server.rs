@@ -13,7 +13,7 @@ use cp_microservice::api::server::action::Action;
 use cp_microservice::api::server::dispatch::Dispatch;
 use cp_microservice::api::server::input::input_plugin::InputPlugin;
 use cp_microservice::api::shared::request::Request;
-use cp_microservice::error::Error;
+use cp_microservice::core::error::Error;
 use cp_microservice::r#impl::api::server::input::amqp_input::AmqpInput;
 use cp_microservice::r#impl::api::shared::amqp_queue_consumer::AmqpQueueConsumer;
 

@@ -7,7 +7,7 @@ use tokio::time::timeout;
 use crate::api::server::input::input_data::InputData;
 use crate::api::server::input::plugins::token_manager::token::Token;
 use crate::api::server::input::plugins::token_manager::token_manager_plugin::TokenManagerPlugin;
-use crate::error::{Error, ErrorKind};
+use crate::core::error::{Error, ErrorKind};
 
 #[derive(Default)]
 pub struct Authorizer {}

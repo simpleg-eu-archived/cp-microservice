@@ -5,7 +5,7 @@ use serde_json::Value;
 
 use crate::{
     api::server::input::plugins::token_manager::token::Token,
-    error::{Error, ErrorKind},
+    core::error::{Error, ErrorKind},
 };
 
 const AUTH0_PERMISSIONS_CLAIM: &str = "permissions";

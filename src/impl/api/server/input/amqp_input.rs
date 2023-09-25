@@ -12,7 +12,7 @@ use crate::api::server::input::input::Input;
 use crate::api::server::input::input_data::InputData;
 use crate::api::server::input::replier::Replier;
 use crate::api::shared::request::Request;
-use crate::error::{Error, ErrorKind};
+use crate::core::error::{Error, ErrorKind};
 use crate::r#impl::api::shared::amqp_queue_consumer::AmqpQueueConsumer;
 
 pub struct AmqpInput<'a> {

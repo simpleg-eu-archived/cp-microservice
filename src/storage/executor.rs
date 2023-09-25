@@ -2,7 +2,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use crate::error::Error;
+use crate::core::error::Error;
 
 pub type Executor<StorageConnectionType, StorageRequestType> = Arc<
     dyn Fn(

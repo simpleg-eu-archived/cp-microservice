@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use async_channel::Sender;
 
-use crate::error::Error;
+use crate::core::error::Error;
 
 pub type Executor<LogicRequestType, StorageRequestType> = Arc<
     dyn Fn(

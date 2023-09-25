@@ -1,7 +1,7 @@
 use crate::api::server::input::input_data::InputData;
 use async_trait::async_trait;
 
-use crate::error::Error;
+use crate::core::error::Error;
 
 #[async_trait]
 pub trait InputPlugin {

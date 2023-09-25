@@ -4,7 +4,7 @@ use async_trait::async_trait;
 
 use crate::api::server::input::input_data::InputData;
 use crate::api::server::input::plugins::token_manager::token::Token;
-use crate::error::Error;
+use crate::core::error::Error;
 
 #[async_trait]
 pub trait TokenManagerPlugin {

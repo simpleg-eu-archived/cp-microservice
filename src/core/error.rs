@@ -10,7 +10,7 @@ pub enum ErrorKind {
     RequestError,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct Error {
     pub kind: ErrorKind,
     pub message: String,

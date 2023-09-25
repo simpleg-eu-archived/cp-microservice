@@ -9,7 +9,7 @@ use async_channel::{unbounded, Receiver};
 use log::info;
 use tokio::time::timeout;
 
-use crate::error::Error;
+use crate::core::error::Error;
 use crate::storage::executor::Executor;
 
 pub struct Dispatch<StorageRequestType: Debug> {

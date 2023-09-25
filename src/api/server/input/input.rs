@@ -1,5 +1,5 @@
 use crate::api::server::input::input_data::InputData;
-use crate::error::Error;
+use crate::core::error::Error;
 
 ///
 /// Entry point, for requests, into the server's logic.

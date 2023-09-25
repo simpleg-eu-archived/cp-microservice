@@ -13,7 +13,7 @@ use crate::api::server::input::plugins::token_manager::token_wrapper::TokenWrapp
 use crate::api::server::input::replier::Replier;
 use crate::api::shared::request::Request;
 use crate::api::shared::request_header::RequestHeader;
-use crate::error::{Error, ErrorKind};
+use crate::core::error::{Error, ErrorKind};
 
 pub const TOKEN_MANAGER_PLUGIN_ID: &str = "token_manager";
 

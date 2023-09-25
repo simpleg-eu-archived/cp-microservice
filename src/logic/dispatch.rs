@@ -9,7 +9,7 @@ use async_channel::{Receiver, Sender};
 use log::info;
 use tokio::time::timeout;
 
-use crate::error::Error;
+use crate::core::error::Error;
 use crate::logic::executor::Executor;
 
 pub struct Dispatch<LogicRequestType: Debug, StorageRequestType> {

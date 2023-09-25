@@ -9,8 +9,8 @@ use serde_json::Value;
 
 use crate::{
     api::server::input::plugins::token_manager::{token::Token, token_wrapper::TokenWrapper},
-    error::Error,
-    error::ErrorKind,
+    core::error::Error,
+    core::error::ErrorKind,
     r#impl::api::server::input::token_manager::{
         json_web_token::JsonWebToken, open_id_connect_config::OpenIdConnectConfig,
     },

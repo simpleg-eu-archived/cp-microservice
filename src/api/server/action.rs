@@ -6,7 +6,7 @@ use async_channel::Sender;
 use serde_json::Value;
 
 use crate::api::shared::request::Request;
-use crate::error::Error;
+use crate::core::error::Error;
 
 pub type Action<LogicRequestType> = Arc<
     dyn Fn(
