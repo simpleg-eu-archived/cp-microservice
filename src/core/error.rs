@@ -8,6 +8,7 @@ pub enum ErrorKind {
     LogicError,
     StorageError,
     RequestError,
+    Unknown,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
