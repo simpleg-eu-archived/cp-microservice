@@ -106,14 +106,16 @@ pub async fn try_initialize_microservice<
         }
     };
 
-    let storage_dispatch: crate::storage::dispatch::Dispatch<StorageRequestType, Client> =
-        crate::storage::dispatch::Dispatch::new(
-            storage_request_receiver,
-            storage_initialization_package.executors,
-            mongodb_client,
-        );
+    std::thread::spawn(move || {
+        let storage_dispatch: crate::storage::dispatch::Dispatch<StorageRequestType, Client> =
+            crate::storage::dispatch::Dispatch::new(
+                storage_request_receiver,
+                storage_initialization_package.executors,
+                mongodb_client,
+            );
 
-    tokio::spawn(storage_dispatch.run());
+        futures_executor::block_on(storage_dispatch.run());
+    });
 
     Ok(())
 }
