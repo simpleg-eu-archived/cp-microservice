@@ -9,6 +9,7 @@ pub enum ErrorKind {
     StorageError,
     RequestError,
     Unknown,
+    InitializationError,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]

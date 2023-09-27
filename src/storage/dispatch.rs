@@ -12,19 +12,30 @@ use tokio::time::timeout;
 use crate::core::error::Error;
 use crate::storage::executor::Executor;
 
-pub struct Dispatch<StorageRequestType: Debug> {
+pub struct Dispatch<StorageRequestType: Debug, StorageConnectionType: Clone> {
     receiver: Receiver<StorageRequestType>,
-    executors: HashMap<Discriminant<StorageRequestType>, Executor<(), StorageRequestType>>,
+    executors: HashMap<
+        Discriminant<StorageRequestType>,
+        Executor<StorageConnectionType, StorageRequestType>,
+    >,
+    connection: StorageConnectionType,
 }
 
-impl<StorageRequestType: Debug> Dispatch<StorageRequestType> {
+impl<StorageRequestType: Debug, StorageConnectionType: Clone>
+    Dispatch<StorageRequestType, StorageConnectionType>
+{
     pub fn new(
         receiver: Receiver<StorageRequestType>,
-        executors: HashMap<Discriminant<StorageRequestType>, Executor<(), StorageRequestType>>,
-    ) -> Dispatch<StorageRequestType> {
+        executors: HashMap<
+            Discriminant<StorageRequestType>,
+            Executor<StorageConnectionType, StorageRequestType>,
+        >,
+        connection: StorageConnectionType,
+    ) -> Dispatch<StorageRequestType, StorageConnectionType> {
         Dispatch {
             receiver,
             executors,
+            connection,
         }
     }
 
@@ -49,7 +60,7 @@ impl<StorageRequestType: Debug> Dispatch<StorageRequestType> {
                 }
             };
 
-            if let Err(error) = executor((), storage_request).await {
+            if let Err(error) = executor(self.connection.clone(), storage_request).await {
                 info!("storage executor returned error: {}", error);
             }
         }
@@ -85,7 +96,7 @@ pub async fn run_expected_executor() {
         )]);
     let (sender, receiver) = unbounded::<StorageRequest>();
 
-    let dispatch: Dispatch<StorageRequest> = Dispatch::new(receiver, executors);
+    let dispatch: Dispatch<StorageRequest, ()> = Dispatch::new(receiver, executors, ());
 
     tokio::spawn(dispatch.run());
 
