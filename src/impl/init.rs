@@ -1,8 +1,7 @@
 use std::mem::Discriminant;
 use std::{collections::HashMap, sync::Arc};
 
-use mongodb::options::ClientOptions;
-use mongodb::Client;
+use async_channel::{Receiver, Sender};
 use multiple_connections_lapin_wrapper::{
     amqp_wrapper::AmqpWrapper, config::amqp_connect_config::AmqpConnectConfig,
 };
@@ -29,17 +28,7 @@ pub struct LogicInitializationPackage<
         Discriminant<LogicRequestType>,
         crate::logic::executor::Executor<LogicRequestType, StorageRequestType>,
     >,
-}
-
-pub struct StorageInitializationPackage<
-    StorageRequestType: 'static + Send + Sync + std::fmt::Debug,
-    StorageConnectionType: 'static + Send + Sync + Clone,
-> {
-    pub mongodb_connection_file: String,
-    pub executors: HashMap<
-        Discriminant<StorageRequestType>,
-        crate::storage::executor::Executor<StorageConnectionType, StorageRequestType>,
-    >,
+    pub storage_request_sender: Sender<StorageRequestType>,
 }
 
 pub async fn try_initialize_microservice<
@@ -48,14 +37,9 @@ pub async fn try_initialize_microservice<
 >(
     api_initialization_package: ApiInitializationPackage<LogicRequestType>,
     logic_initialization_package: LogicInitializationPackage<LogicRequestType, StorageRequestType>,
-    storage_initialization_package: StorageInitializationPackage<StorageRequestType, Client>,
 ) -> Result<(), std::io::Error> {
-    let mut args = std::env::args();
-
     let amqp_connect_config: AmqpConnectConfig =
         get_amqp_connect_config(api_initialization_package.amqp_connection_file)?;
-    let mongodb_client_options: ClientOptions =
-        get_mongodb_client_options(storage_initialization_package.mongodb_connection_file)?;
 
     let amqp_wrapper = match AmqpWrapper::try_new(amqp_connect_config) {
         Ok(amqp_wrapper) => amqp_wrapper,
@@ -84,36 +68,14 @@ pub async fn try_initialize_microservice<
 
     tokio::spawn(api_dispatch.run());
 
-    let (storage_request_sender, storage_request_receiver) =
-        async_channel::bounded::<StorageRequestType>(1024usize);
-
     let logic_dispatch: crate::logic::dispatch::Dispatch<LogicRequestType, StorageRequestType> =
         crate::logic::dispatch::Dispatch::new(
             logic_request_receiver,
             logic_initialization_package.executors,
-            storage_request_sender,
+            logic_initialization_package.storage_request_sender,
         );
 
     tokio::spawn(logic_dispatch.run());
-
-    let mongodb_client: Client = match Client::with_options(mongodb_client_options) {
-        Ok(mongodb_client) => mongodb_client,
-        Err(error) => {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("failed to create MongoDB client: {}", error),
-            ))
-        }
-    };
-
-    let storage_dispatch: crate::storage::dispatch::Dispatch<StorageRequestType, Client> =
-        crate::storage::dispatch::Dispatch::new(
-            storage_request_receiver,
-            storage_initialization_package.executors,
-            mongodb_client,
-        );
-
-    tokio::spawn(storage_dispatch.run());
 
     Ok(())
 }
@@ -135,25 +97,6 @@ fn get_amqp_connect_config(
         };
 
     Ok(amqp_connect_config)
-}
-
-fn get_mongodb_client_options(
-    mongodb_connection_file: String,
-) -> Result<ClientOptions, std::io::Error> {
-    let mongodb_connection_file_content = std::fs::read_to_string(mongodb_connection_file)?;
-
-    let mongodb_client_options =
-        match serde_json::from_str::<ClientOptions>(&mongodb_connection_file_content) {
-            Ok(mongodb_client_options) => mongodb_client_options,
-            Err(error) => {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    format!("failed to deserialize MongoDB connection file: {}", &error),
-                ))
-            }
-        };
-
-    Ok(mongodb_client_options)
 }
 
 fn get_amqp_api(amqp_api_file: String) -> Result<Vec<AmqpQueueConsumer>, std::io::Error> {
