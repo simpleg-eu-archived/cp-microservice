@@ -15,6 +15,8 @@ use crate::{
 };
 
 pub struct ApiInitializationPackage<LogicRequestType: 'static + Send + Sync + std::fmt::Debug> {
+    pub amqp_connection_file: String,
+    pub amqp_api_file: String,
     pub actions: HashMap<String, Action<LogicRequestType>>,
     pub plugins: Vec<Arc<dyn InputPlugin + Send + Sync>>,
 }
@@ -33,6 +35,7 @@ pub struct StorageInitializationPackage<
     StorageRequestType: 'static + Send + Sync + std::fmt::Debug,
     StorageConnectionType: 'static + Send + Sync + Clone,
 > {
+    pub mongodb_connection_file: String,
     pub executors: HashMap<
         Discriminant<StorageRequestType>,
         crate::storage::executor::Executor<StorageConnectionType, StorageRequestType>,
@@ -49,44 +52,10 @@ pub async fn try_initialize_microservice<
 ) -> Result<(), std::io::Error> {
     let mut args = std::env::args();
 
-    let amqp_connection_file = match args.nth(1) {
-        Some(amqp_connection_file) => amqp_connection_file,
-        None => {
-            log::error!("expected AMQP connection file as first argument");
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "expected AMQP connection file as first argument",
-            ));
-        }
-    };
-
-    let mongodb_connection_file = match args.nth(2) {
-        Some(mongodb_connection_file) => mongodb_connection_file,
-        None => {
-            log::error!("expected MongoDB connection file as second argument");
-
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "expected MongoDB connection file as first argument",
-            ));
-        }
-    };
-
-    let amqp_api_file = match args.nth(3) {
-        Some(amqp_api_file) => amqp_api_file,
-        None => {
-            log::error!("expected AMQP API file as third argument");
-
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "expected AMQP API file as third argument",
-            ));
-        }
-    };
-
-    let amqp_connect_config: AmqpConnectConfig = get_amqp_connect_config(amqp_connection_file)?;
+    let amqp_connect_config: AmqpConnectConfig =
+        get_amqp_connect_config(api_initialization_package.amqp_connection_file)?;
     let mongodb_client_options: ClientOptions =
-        get_mongodb_client_options(mongodb_connection_file)?;
+        get_mongodb_client_options(storage_initialization_package.mongodb_connection_file)?;
 
     let amqp_wrapper = match AmqpWrapper::try_new(amqp_connect_config) {
         Ok(amqp_wrapper) => amqp_wrapper,
@@ -98,7 +67,7 @@ pub async fn try_initialize_microservice<
         }
     };
 
-    let amqp_api = get_amqp_api(amqp_api_file)?;
+    let amqp_api = get_amqp_api(api_initialization_package.amqp_api_file)?;
 
     let amqp_inputs = generate_inputs_from_api(amqp_wrapper, amqp_api).await?;
 
