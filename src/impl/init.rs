@@ -113,7 +113,7 @@ pub async fn try_initialize_microservice<
             api_initialization_package.plugins,
         );
 
-    api_dispatch.run().await;
+    tokio::spawn(api_dispatch.run());
 
     let (storage_request_sender, storage_request_receiver) =
         async_channel::bounded::<StorageRequestType>(1024usize);
