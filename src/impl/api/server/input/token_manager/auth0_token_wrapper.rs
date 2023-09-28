@@ -22,11 +22,13 @@ pub struct Auth0TokenWrapper {
 }
 
 impl Auth0TokenWrapper {
-    pub fn new(jwks: JwkSet, open_id_connect_config: OpenIdConnectConfig) -> Self {
-        Self {
+    pub async fn try_new(open_id_connect_config: OpenIdConnectConfig) -> Result<Self, Error> {
+        let jwks = try_get_jwks(open_id_connect_config.jwks_uri()).await?;
+
+        Ok(Self {
             jwks,
             open_id_connect_config,
-        }
+        })
     }
 }
 
@@ -113,7 +115,7 @@ impl TokenWrapper for Auth0TokenWrapper {
     }
 }
 
-pub async fn try_get_jwks(jwks_uri: &str) -> Result<JwkSet, Error> {
+async fn try_get_jwks(jwks_uri: &str) -> Result<JwkSet, Error> {
     let jwks = match reqwest::get(jwks_uri).await {
         Ok(response) => match response.json::<JwkSet>().await {
             Ok(jwks) => jwks,
