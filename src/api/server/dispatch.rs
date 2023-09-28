@@ -71,38 +71,40 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
 
                                 for (index, plugin) in plugins_pointer.as_slice().iter().enumerate()
                                 {
-                                    if filtered_out_plugins.contains(&plugin.id().to_string()) {
-                                        continue;
-                                    }
+                                    if !filtered_out_plugins.contains(&plugin.id().to_string()) {
+                                        input_data =
+                                            match plugin.handle_input_data(input_data).await {
+                                                Ok(input_data) => input_data,
+                                                Err((input_data, error)) => {
+                                                    let replier = input_data.replier;
 
-                                    input_data = match plugin.handle_input_data(input_data).await {
-                                        Ok(input_data) => input_data,
-                                        Err((input_data, error)) => {
-                                            let replier = input_data.replier;
+                                                    let error_value =
+                                                        match serde_json::to_value(error.clone()) {
+                                                            Ok(error_value) => error_value,
+                                                            Err(error) => {
+                                                                json!(format!(
+                                                                    "failed to process request: {}",
+                                                                    error
+                                                                ))
+                                                            }
+                                                        };
 
-                                            let error_value =
-                                                match serde_json::to_value(error.clone()) {
-                                                    Ok(error_value) => error_value,
-                                                    Err(error) => {
-                                                        json!(format!(
-                                                            "failed to process request: {}",
-                                                            error
-                                                        ))
+                                                    match replier(error_value).await {
+                                                        Ok(_) => (),
+                                                        Err(error) => warn!(
+                                                        "failed to reply when plugin failed: {}",
+                                                        error
+                                                    ),
                                                     }
-                                                };
 
-                                            match replier(error_value).await {
-                                                Ok(_) => (),
-                                                Err(error) => warn!(
-                                                    "failed to reply when plugin failed: {}",
-                                                    error
-                                                ),
-                                            }
-
-                                            warn!("plugin failed to handle input data: {}", error);
-                                            break;
-                                        }
-                                    };
+                                                    warn!(
+                                                        "plugin failed to handle input data: {}",
+                                                        error
+                                                    );
+                                                    break;
+                                                }
+                                            };
+                                    }
 
                                     if index == plugins_pointer.len() - 1 {
                                         handle_input_data::<LogicRequestType>(
