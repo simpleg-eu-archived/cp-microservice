@@ -1,3 +1,4 @@
+pub mod amqp_api_entry;
 pub mod amqp_consume;
 pub mod amqp_publish;
 pub mod amqp_qos;

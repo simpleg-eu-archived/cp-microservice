@@ -64,7 +64,10 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
                             } else {
                                 for (index, plugin) in plugins_pointer.as_slice().iter().enumerate()
                                 {
-                                    if input.filter_out_plugins().contains(&plugin.id()) {
+                                    if input
+                                        .filter_out_plugins()
+                                        .contains(&plugin.id().to_string())
+                                    {
                                         continue;
                                     }
 
@@ -177,7 +180,7 @@ impl Input for InputTimedImpl {
         })
     }
 
-    fn filter_out_plugins(&self) -> &[&str] {
+    fn filter_out_plugins(&self) -> &[String] {
         &[]
     }
 }
@@ -248,7 +251,7 @@ impl Input for InputDummyImpl {
         Ok(InputData { request, replier })
     }
 
-    fn filter_out_plugins(&self) -> &[&str] {
+    fn filter_out_plugins(&self) -> &[String] {
         &[]
     }
 }

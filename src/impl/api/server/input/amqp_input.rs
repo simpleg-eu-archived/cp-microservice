@@ -15,19 +15,19 @@ use crate::api::shared::request::Request;
 use crate::core::error::{Error, ErrorKind};
 use crate::r#impl::api::shared::amqp_queue_consumer::AmqpQueueConsumer;
 
-pub struct AmqpInput<'a> {
+pub struct AmqpInput {
     channel: Arc<Channel>,
     consumer: Consumer,
     reject_options: BasicRejectOptions,
     ack_options: BasicAckOptions,
-    filter_out_plugins: Vec<&'a str>,
+    filter_out_plugins: Vec<String>,
 }
 
-impl<'a> AmqpInput<'a> {
+impl AmqpInput {
     pub async fn try_new(
         channel: Arc<Channel>,
         queue_consumer: AmqpQueueConsumer,
-        filter_out_plugins: Vec<&'a str>,
+        filter_out_plugins: Vec<String>,
     ) -> Result<AmqpInput, Error> {
         let _queue = match channel
             .queue_declare(
@@ -122,7 +122,7 @@ impl<'a> AmqpInput<'a> {
 }
 
 #[async_trait]
-impl<'a> Input for AmqpInput<'a> {
+impl Input for AmqpInput {
     async fn receive(&mut self) -> Result<InputData, Error> {
         let delivery = match self.consumer.try_next().await {
             Ok(optional_delivery) => match optional_delivery {
@@ -236,7 +236,7 @@ impl<'a> Input for AmqpInput<'a> {
         Ok(InputData::new(request, replier))
     }
 
-    fn filter_out_plugins(&self) -> &[&str] {
+    fn filter_out_plugins(&self) -> &[String] {
         self.filter_out_plugins.as_slice()
     }
 }

@@ -6,6 +6,7 @@ use multiple_connections_lapin_wrapper::{
     amqp_wrapper::AmqpWrapper, config::amqp_connect_config::AmqpConnectConfig,
 };
 
+use crate::r#impl::api::shared::amqp_api_entry::AmqpApiEntry;
 use crate::{
     api::server::{action::Action, input::input_plugin::InputPlugin},
     r#impl::api::{
@@ -99,10 +100,10 @@ fn get_amqp_connect_config(
     Ok(amqp_connect_config)
 }
 
-fn get_amqp_api(amqp_api_file: String) -> Result<Vec<AmqpQueueConsumer>, std::io::Error> {
+fn get_amqp_api<'a>(amqp_api_file: String) -> Result<Vec<AmqpApiEntry>, std::io::Error> {
     let amqp_api_file_content = std::fs::read_to_string(amqp_api_file)?;
 
-    let amqp_api = match serde_json::from_str::<Vec<AmqpQueueConsumer>>(&amqp_api_file_content) {
+    let amqp_api = match serde_json::from_str::<Vec<AmqpApiEntry>>(&amqp_api_file_content) {
         Ok(amqp_api) => amqp_api,
         Err(error) => {
             return Err(std::io::Error::new(
@@ -115,13 +116,13 @@ fn get_amqp_api(amqp_api_file: String) -> Result<Vec<AmqpQueueConsumer>, std::io
     Ok(amqp_api)
 }
 
-async fn generate_inputs_from_api<'a>(
+async fn generate_inputs_from_api(
     mut amqp_wrapper: AmqpWrapper,
-    amqp_api: Vec<AmqpQueueConsumer>,
-) -> Result<Vec<AmqpInput<'a>>, std::io::Error> {
-    let mut inputs: Vec<AmqpInput<'a>> = Vec::new();
+    amqp_api: Vec<AmqpApiEntry>,
+) -> Result<Vec<AmqpInput>, std::io::Error> {
+    let mut inputs: Vec<AmqpInput> = Vec::new();
 
-    for amqp_queue_consumer in amqp_api {
+    for amqp_api_entry in amqp_api {
         let channel = match amqp_wrapper.try_get_channel().await {
             Ok(channel) => channel,
             Err(error) => {
@@ -132,7 +133,13 @@ async fn generate_inputs_from_api<'a>(
             }
         };
 
-        let amqp_input = match AmqpInput::try_new(channel, amqp_queue_consumer, Vec::new()).await {
+        let amqp_input = match AmqpInput::try_new(
+            channel,
+            amqp_api_entry.amqp_queue_consumer,
+            amqp_api_entry.filter_out_plugins,
+        )
+        .await
+        {
             Ok(amqp_input) => amqp_input,
             Err(error) => {
                 return Err(std::io::Error::new(
