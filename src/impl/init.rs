@@ -6,9 +6,10 @@ use multiple_connections_lapin_wrapper::{
     amqp_wrapper::AmqpWrapper, config::amqp_connect_config::AmqpConnectConfig,
 };
 
+use crate::api::server::input::action::Action;
 use crate::r#impl::api::shared::amqp_api_entry::AmqpApiEntry;
 use crate::{
-    api::server::{action::Action, input::input_plugin::InputPlugin},
+    api::server::input::input_plugin::InputPlugin,
     r#impl::api::{
         server::input::amqp_input::AmqpInput, shared::amqp_queue_consumer::AmqpQueueConsumer,
     },
@@ -133,12 +134,7 @@ async fn generate_inputs_from_api(
             }
         };
 
-        let amqp_input = match AmqpInput::try_new(
-            channel,
-            amqp_api_entry.amqp_queue_consumer,
-            amqp_api_entry.filter_out_plugins,
-        )
-        .await
+        let amqp_input = match AmqpInput::try_new(channel, amqp_api_entry.amqp_queue_consumer).await
         {
             Ok(amqp_input) => amqp_input,
             Err(error) => {

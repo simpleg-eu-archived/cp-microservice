@@ -2,7 +2,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::api::server::action::Action;
+use crate::api::server::input::action::Action;
+use crate::api::server::input::executor::Executor;
 use crate::api::server::input::input::Input;
 use crate::api::server::input::input_data::InputData;
 use crate::api::server::input::input_plugin::InputPlugin;
@@ -62,12 +63,15 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
                                 )
                                 .await;
                             } else {
+                                let filtered_out_plugins =
+                                    get_filtered_out_plugins_for_action::<LogicRequestType>(
+                                        input_data.request.header().action(),
+                                        &actions_pointer,
+                                    );
+
                                 for (index, plugin) in plugins_pointer.as_slice().iter().enumerate()
                                 {
-                                    if input
-                                        .filter_out_plugins()
-                                        .contains(&plugin.id().to_string())
-                                    {
+                                    if filtered_out_plugins.contains(&plugin.id().to_string()) {
                                         continue;
                                     }
 
@@ -123,6 +127,16 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
     }
 }
 
+fn get_filtered_out_plugins_for_action<LogicRequestType>(
+    action: &str,
+    actions: &Arc<HashMap<String, Action<LogicRequestType>>>,
+) -> Vec<String> {
+    match actions.get(action) {
+        Some(action) => action.filter_out_plugins(),
+        None => Vec::new(),
+    }
+}
+
 async fn handle_input_data<LogicRequestType: 'static + Send>(
     input_data: InputData,
     actions: &Arc<HashMap<String, Action<LogicRequestType>>>,
@@ -132,7 +146,8 @@ async fn handle_input_data<LogicRequestType: 'static + Send>(
 
     match actions.get(action) {
         Some(action) => {
-            let action_result = action(input_data.request, sender).await;
+            let executor = action.executor();
+            let action_result = executor(input_data.request, sender).await;
 
             let replier: Replier = input_data.replier;
             if let Err(error) = replier(json!(action_result)).await {
@@ -178,10 +193,6 @@ impl Input for InputTimedImpl {
             ),
             replier: Arc::new(move |value: Value| Box::pin(async { Ok(()) })),
         })
-    }
-
-    fn filter_out_plugins(&self) -> &[String] {
-        &[]
     }
 }
 
@@ -249,10 +260,6 @@ impl Input for InputDummyImpl {
         }
 
         Ok(InputData { request, replier })
-    }
-
-    fn filter_out_plugins(&self) -> &[String] {
-        &[]
     }
 }
 

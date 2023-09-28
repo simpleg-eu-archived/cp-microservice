@@ -5,5 +5,4 @@ use crate::r#impl::api::shared::amqp_queue_consumer::AmqpQueueConsumer;
 #[derive(Deserialize, Serialize)]
 pub struct AmqpApiEntry {
     pub amqp_queue_consumer: AmqpQueueConsumer,
-    pub filter_out_plugins: Vec<String>,
 }

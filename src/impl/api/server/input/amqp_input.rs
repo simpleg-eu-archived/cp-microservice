@@ -20,14 +20,12 @@ pub struct AmqpInput {
     consumer: Consumer,
     reject_options: BasicRejectOptions,
     ack_options: BasicAckOptions,
-    filter_out_plugins: Vec<String>,
 }
 
 impl AmqpInput {
     pub async fn try_new(
         channel: Arc<Channel>,
         queue_consumer: AmqpQueueConsumer,
-        filter_out_plugins: Vec<String>,
     ) -> Result<AmqpInput, Error> {
         let _queue = match channel
             .queue_declare(
@@ -80,7 +78,6 @@ impl AmqpInput {
             consumer,
             reject_options,
             ack_options,
-            filter_out_plugins,
         })
     }
 
@@ -234,9 +231,5 @@ impl Input for AmqpInput {
         });
 
         Ok(InputData::new(request, replier))
-    }
-
-    fn filter_out_plugins(&self) -> &[String] {
-        self.filter_out_plugins.as_slice()
     }
 }

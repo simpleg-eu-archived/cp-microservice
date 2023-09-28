@@ -8,7 +8,7 @@ use serde_json::Value;
 use crate::api::shared::request::Request;
 use crate::core::error::Error;
 
-pub type Action<LogicRequestType> = Arc<
+pub type Executor<LogicRequestType> = Arc<
     dyn Fn(
             Request,
             Sender<LogicRequestType>,

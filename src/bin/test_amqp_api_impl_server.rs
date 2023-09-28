@@ -4,12 +4,12 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use async_channel::Sender;
+use cp_microservice::api::server::input::action::Action;
 use lapin::Channel;
 use multiple_connections_lapin_wrapper::amqp_wrapper::AmqpWrapper;
 use multiple_connections_lapin_wrapper::config::amqp_connect_config::AmqpConnectConfig;
 use serde_json::Value;
 
-use cp_microservice::api::server::action::Action;
 use cp_microservice::api::server::dispatch::Dispatch;
 use cp_microservice::api::server::input::input_plugin::InputPlugin;
 use cp_microservice::api::shared::request::Request;
@@ -78,12 +78,15 @@ pub async fn main() {
     let amqp_queue_consumer: AmqpQueueConsumer =
         serde_json::from_str(amqp_queue_consumer_json).expect("expected amqp queue consumer");
 
-    let amqp_input: AmqpInput = AmqpInput::try_new(channel, amqp_queue_consumer, Vec::new())
+    let amqp_input: AmqpInput = AmqpInput::try_new(channel, amqp_queue_consumer)
         .await
         .unwrap();
     let inputs = vec![amqp_input];
-    let dummy_action: Action<DummyLogicRequest> =
-        Arc::new(move |request, sender| Box::pin(dummy_action(request, sender)));
+    let dummy_action: Action<DummyLogicRequest> = Action::new(
+        "dummy_action".to_string(),
+        Arc::new(move |request, sender| Box::pin(dummy_action(request, sender))),
+        Vec::new(),
+    );
     let actions: HashMap<String, Action<DummyLogicRequest>> =
         HashMap::from([("dummy:action".to_string(), dummy_action)]);
 
