@@ -69,6 +69,10 @@ impl Token for NoUserIdToken {
     fn user_id(&self) -> &str {
         ""
     }
+
+    fn org_id(&self) -> Option<&str> {
+        todo!()
+    }
 }
 
 #[derive(Default)]
@@ -81,5 +85,9 @@ impl Token for TokenWithUserId {
 
     fn user_id(&self) -> &str {
         "123"
+    }
+
+    fn org_id(&self) -> Option<&str> {
+        todo!()
     }
 }

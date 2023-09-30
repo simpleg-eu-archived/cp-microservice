@@ -12,11 +12,13 @@ const AUTH0_PERMISSIONS_CLAIM: &str = "permissions";
 const ORGANIZATION_PERMISSIONS_CLAIM: &str = "org_permissions";
 
 const USER_ID_CLAIM: &str = "sub";
+const ORG_ID_CLAIM: &str = "org_id";
 
 pub struct JsonWebToken {
     data: TokenData<HashMap<String, Value>>,
     permissions: Vec<String>,
     user_id: String,
+    org_id: Option<String>,
 }
 
 impl JsonWebToken {
@@ -46,10 +48,24 @@ impl JsonWebToken {
             }
         };
 
+        let org_id = match data.claims.get(ORG_ID_CLAIM) {
+            Some(id) => match id.as_str() {
+                Some(id) => Some(id.to_string()),
+                None => {
+                    return Err(Error::new(
+                        ErrorKind::ApiError,
+                        "failed to read 'org_id' claim as a string",
+                    ))
+                }
+            },
+            None => None,
+        };
+
         Ok(Self {
             data,
             permissions,
             user_id,
+            org_id,
         })
     }
 }
@@ -61,6 +77,13 @@ impl Token for JsonWebToken {
 
     fn user_id(&self) -> &str {
         self.user_id.as_str()
+    }
+
+    fn org_id(&self) -> Option<&str> {
+        match &self.org_id {
+            Some(id) => Some(id.as_str()),
+            None => None,
+        }
     }
 }
 
