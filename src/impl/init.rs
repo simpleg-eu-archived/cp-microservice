@@ -2,6 +2,7 @@ use std::mem::Discriminant;
 use std::{collections::HashMap, sync::Arc};
 
 use async_channel::{Receiver, Sender};
+use futures_util::future::join_all;
 use multiple_connections_lapin_wrapper::{
     amqp_wrapper::AmqpWrapper, config::amqp_connect_config::AmqpConnectConfig,
 };
@@ -9,6 +10,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::api::server::input::action::Action;
 use crate::r#impl::api::shared::amqp_api_entry::AmqpApiEntry;
+use crate::r#impl::process_signals::listen_to_process_signals;
 use crate::{
     api::server::input::input_plugin::InputPlugin,
     r#impl::api::{
@@ -21,7 +23,6 @@ pub struct ApiInitializationPackage<LogicRequestType: 'static + Send + Sync + st
     pub amqp_api_file: String,
     pub actions: HashMap<String, Action<LogicRequestType>>,
     pub plugins: Vec<Arc<dyn InputPlugin + Send + Sync>>,
-    pub cancellation_token: CancellationToken,
 }
 
 pub struct LogicInitializationPackage<
@@ -42,6 +43,10 @@ pub async fn try_initialize_microservice<
     api_initialization_package: ApiInitializationPackage<LogicRequestType>,
     logic_initialization_package: LogicInitializationPackage<LogicRequestType, StorageRequestType>,
 ) -> Result<(), std::io::Error> {
+    let cancellation_token = CancellationToken::new();
+
+    listen_to_process_signals(cancellation_token.clone());
+
     let amqp_connect_config: AmqpConnectConfig =
         get_amqp_connect_config(api_initialization_package.amqp_connection_file)?;
 
@@ -70,13 +75,22 @@ pub async fn try_initialize_microservice<
             api_initialization_package.plugins,
         );
 
-    tokio::spawn(api_dispatch.run(api_initialization_package.cancellation_token));
+    let api_cancellation_token = cancellation_token.clone();
+    tokio::spawn(async move {
+        // when handles have finished, the program will exit since an exit signal is sent to the process
+        let handles = api_dispatch.run(api_cancellation_token).await;
+
+        join_all(handles).await;
+
+        std::process::exit(0);
+    });
 
     let logic_dispatch: crate::logic::dispatch::Dispatch<LogicRequestType, StorageRequestType> =
         crate::logic::dispatch::Dispatch::new(
             logic_request_receiver,
             logic_initialization_package.executors,
             logic_initialization_package.storage_request_sender,
+            cancellation_token,
         );
 
     tokio::spawn(logic_dispatch.run());

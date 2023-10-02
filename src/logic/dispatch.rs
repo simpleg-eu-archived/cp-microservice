@@ -8,6 +8,7 @@ use std::time::Duration;
 use async_channel::{Receiver, Sender};
 use log::info;
 use tokio::time::timeout;
+use tokio_util::sync::CancellationToken;
 
 use crate::core::error::Error;
 use crate::logic::executor::Executor;
@@ -17,6 +18,7 @@ pub struct Dispatch<LogicRequestType: Debug, StorageRequestType> {
     executors:
         HashMap<Discriminant<LogicRequestType>, Executor<LogicRequestType, StorageRequestType>>,
     storage_request_sender: Sender<StorageRequestType>,
+    cancellation_token: CancellationToken,
 }
 
 impl<LogicRequestType: Debug, StorageRequestType> Dispatch<LogicRequestType, StorageRequestType> {
@@ -27,16 +29,26 @@ impl<LogicRequestType: Debug, StorageRequestType> Dispatch<LogicRequestType, Sto
             Executor<LogicRequestType, StorageRequestType>,
         >,
         storage_request_sender: Sender<StorageRequestType>,
+        cancellation_token: CancellationToken,
     ) -> Dispatch<LogicRequestType, StorageRequestType> {
         Dispatch {
             logic_request_receiver,
             executors,
             storage_request_sender,
+            cancellation_token,
         }
     }
 
     pub async fn run(self) {
         loop {
+            if self.cancellation_token.is_cancelled() && self.logic_request_receiver.is_empty() {
+                info!(
+                    "cancellation token is cancelled and logic request receiver is empty, logic dispatch is stopping"
+                );
+
+                break;
+            }
+
             let logic_request = match self.logic_request_receiver.recv().await {
                 Ok(logic_request) => logic_request,
                 Err(_) => {
@@ -106,8 +118,12 @@ pub async fn run_expected_executors() {
     let (storage_request_sender, storage_request_receiver) =
         async_channel::unbounded::<StorageRequest>();
 
-    let dispatch: Dispatch<LogicRequest, StorageRequest> =
-        Dispatch::new(receiver, executors, storage_request_sender);
+    let dispatch: Dispatch<LogicRequest, StorageRequest> = Dispatch::new(
+        receiver,
+        executors,
+        storage_request_sender,
+        CancellationToken::new(),
+    );
 
     tokio::spawn(dispatch.run());
 

@@ -15,6 +15,7 @@ use async_trait::async_trait;
 use log::{info, warn};
 use serde_json::{json, Value};
 use tokio::sync::RwLock;
+use tokio::task::JoinHandle;
 use tokio::time::{sleep, timeout};
 use tokio_util::sync::CancellationToken;
 
@@ -44,21 +45,25 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
         }
     }
 
-    pub async fn run(self, cancellation_token: CancellationToken) {
+    pub async fn run(self, cancellation_token: CancellationToken) -> Vec<JoinHandle<()>> {
+        let mut api_handles = Vec::new();
+
         for input in self.inputs {
             let actions_pointer: Arc<HashMap<String, Action<LogicRequestType>>> =
                 self.actions.clone();
             let logic_request_sender = self.sender.clone();
             let plugins_pointer = self.plugins.clone();
 
-            tokio::spawn(run_dispatch_input(
+            api_handles.push(tokio::spawn(run_dispatch_input(
                 input,
                 actions_pointer,
                 logic_request_sender,
                 plugins_pointer,
                 cancellation_token.clone(),
-            ));
+            )));
         }
+
+        api_handles
     }
 }
 
@@ -104,6 +109,8 @@ async fn run_dispatch_input<InputImpl: 'static + Input + Send, LogicRequestType:
 ) {
     loop {
         if cancellation_token.is_cancelled() {
+            info!("cancellation token is cancelled, api dispatch is stopping");
+
             break;
         }
 
