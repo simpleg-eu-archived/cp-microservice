@@ -16,6 +16,7 @@ use cp_microservice::api::shared::request::Request;
 use cp_microservice::core::error::Error;
 use cp_microservice::r#impl::api::server::input::amqp_input::AmqpInput;
 use cp_microservice::r#impl::api::shared::amqp_queue_consumer::AmqpQueueConsumer;
+use tokio_util::sync::CancellationToken;
 
 const ALIVE_TIME_IN_MILLISECONDS: u64 = 600000u64;
 
@@ -96,7 +97,7 @@ pub async fn main() {
     let dispatch: Dispatch<AmqpInput, DummyLogicRequest> =
         Dispatch::new(inputs, actions, sender, plugins);
 
-    tokio::spawn(dispatch.run());
+    tokio::spawn(dispatch.run(CancellationToken::new()));
 
     sleep(Duration::from_millis(ALIVE_TIME_IN_MILLISECONDS));
 }

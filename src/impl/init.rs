@@ -5,6 +5,7 @@ use async_channel::{Receiver, Sender};
 use multiple_connections_lapin_wrapper::{
     amqp_wrapper::AmqpWrapper, config::amqp_connect_config::AmqpConnectConfig,
 };
+use tokio_util::sync::CancellationToken;
 
 use crate::api::server::input::action::Action;
 use crate::r#impl::api::shared::amqp_api_entry::AmqpApiEntry;
@@ -20,6 +21,7 @@ pub struct ApiInitializationPackage<LogicRequestType: 'static + Send + Sync + st
     pub amqp_api_file: String,
     pub actions: HashMap<String, Action<LogicRequestType>>,
     pub plugins: Vec<Arc<dyn InputPlugin + Send + Sync>>,
+    pub cancellation_token: CancellationToken,
 }
 
 pub struct LogicInitializationPackage<
@@ -68,7 +70,7 @@ pub async fn try_initialize_microservice<
             api_initialization_package.plugins,
         );
 
-    tokio::spawn(api_dispatch.run());
+    tokio::spawn(api_dispatch.run(api_initialization_package.cancellation_token));
 
     let logic_dispatch: crate::logic::dispatch::Dispatch<LogicRequestType, StorageRequestType> =
         crate::logic::dispatch::Dispatch::new(

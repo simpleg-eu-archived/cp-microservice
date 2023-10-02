@@ -16,6 +16,7 @@ use log::{info, warn};
 use serde_json::{json, Value};
 use tokio::sync::RwLock;
 use tokio::time::{sleep, timeout};
+use tokio_util::sync::CancellationToken;
 
 use crate::core::error::Error;
 
@@ -43,88 +44,20 @@ impl<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>
         }
     }
 
-    pub async fn run(self) {
-        for mut input in self.inputs {
-            let actions_pointer = self.actions.clone();
+    pub async fn run(self, cancellation_token: CancellationToken) {
+        for input in self.inputs {
+            let actions_pointer: Arc<HashMap<String, Action<LogicRequestType>>> =
+                self.actions.clone();
             let logic_request_sender = self.sender.clone();
             let plugins_pointer = self.plugins.clone();
 
-            tokio::spawn(async move {
-                loop {
-                    let result = input.receive().await;
-
-                    match result {
-                        Ok(mut input_data) => {
-                            if plugins_pointer.len() == 0 {
-                                handle_input_data::<LogicRequestType>(
-                                    input_data,
-                                    &actions_pointer,
-                                    logic_request_sender.clone(),
-                                )
-                                .await;
-                            } else {
-                                let filtered_out_plugins =
-                                    get_filtered_out_plugins_for_action::<LogicRequestType>(
-                                        input_data.request.header().action(),
-                                        &actions_pointer,
-                                    );
-
-                                for (index, plugin) in plugins_pointer.as_slice().iter().enumerate()
-                                {
-                                    if !filtered_out_plugins.contains(&plugin.id().to_string()) {
-                                        input_data =
-                                            match plugin.handle_input_data(input_data).await {
-                                                Ok(input_data) => input_data,
-                                                Err((input_data, error)) => {
-                                                    let replier = input_data.replier;
-
-                                                    let error_value =
-                                                        match serde_json::to_value(error.clone()) {
-                                                            Ok(error_value) => error_value,
-                                                            Err(error) => {
-                                                                json!(format!(
-                                                                    "failed to process request: {}",
-                                                                    error
-                                                                ))
-                                                            }
-                                                        };
-
-                                                    match replier(error_value).await {
-                                                        Ok(_) => (),
-                                                        Err(error) => warn!(
-                                                        "failed to reply when plugin failed: {}",
-                                                        error
-                                                    ),
-                                                    }
-
-                                                    warn!(
-                                                        "plugin failed to handle input data: {}",
-                                                        error
-                                                    );
-                                                    break;
-                                                }
-                                            };
-                                    }
-
-                                    if index == plugins_pointer.len() - 1 {
-                                        handle_input_data::<LogicRequestType>(
-                                            input_data,
-                                            &actions_pointer,
-                                            logic_request_sender.clone(),
-                                        )
-                                        .await;
-
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        Err(error) => {
-                            warn!("failed to receive input: {}", error);
-                        }
-                    }
-                }
-            });
+            tokio::spawn(run_dispatch_input(
+                input,
+                actions_pointer,
+                logic_request_sender,
+                plugins_pointer,
+                cancellation_token.clone(),
+            ));
         }
     }
 }
@@ -158,6 +91,83 @@ async fn handle_input_data<LogicRequestType: 'static + Send>(
         }
         None => {
             info!("unknown action received: {}", action);
+        }
+    }
+}
+
+async fn run_dispatch_input<InputImpl: 'static + Input + Send, LogicRequestType: 'static + Send>(
+    mut input: InputImpl,
+    actions_pointer: Arc<HashMap<String, Action<LogicRequestType>>>,
+    logic_request_sender: Sender<LogicRequestType>,
+    plugins_pointer: Arc<Vec<Arc<dyn InputPlugin + Send + Sync>>>,
+    cancellation_token: CancellationToken,
+) {
+    loop {
+        if cancellation_token.is_cancelled() {
+            break;
+        }
+
+        let result = input.receive().await;
+
+        match result {
+            Ok(mut input_data) => {
+                if plugins_pointer.len() == 0 {
+                    handle_input_data::<LogicRequestType>(
+                        input_data,
+                        &actions_pointer,
+                        logic_request_sender.clone(),
+                    )
+                    .await;
+                } else {
+                    let filtered_out_plugins =
+                        get_filtered_out_plugins_for_action::<LogicRequestType>(
+                            input_data.request.header().action(),
+                            &actions_pointer,
+                        );
+
+                    for (index, plugin) in plugins_pointer.as_slice().iter().enumerate() {
+                        if !filtered_out_plugins.contains(&plugin.id().to_string()) {
+                            input_data = match plugin.handle_input_data(input_data).await {
+                                Ok(input_data) => input_data,
+                                Err((input_data, error)) => {
+                                    let replier = input_data.replier;
+
+                                    let error_value = match serde_json::to_value(error.clone()) {
+                                        Ok(error_value) => error_value,
+                                        Err(error) => {
+                                            json!(format!("failed to process request: {}", error))
+                                        }
+                                    };
+
+                                    match replier(error_value).await {
+                                        Ok(_) => (),
+                                        Err(error) => {
+                                            warn!("failed to reply when plugin failed: {}", error)
+                                        }
+                                    }
+
+                                    warn!("plugin failed to handle input data: {}", error);
+                                    break;
+                                }
+                            };
+                        }
+
+                        if index == plugins_pointer.len() - 1 {
+                            handle_input_data::<LogicRequestType>(
+                                input_data,
+                                &actions_pointer,
+                                logic_request_sender.clone(),
+                            )
+                            .await;
+
+                            break;
+                        }
+                    }
+                }
+            }
+            Err(error) => {
+                warn!("failed to receive input: {}", error);
+            }
         }
     }
 }
@@ -213,7 +223,7 @@ pub async fn handle_multiple_inputs_concurrently() {
     let dispatch: Dispatch<InputTimedImpl, LogicRequest> =
         Dispatch::new(inputs, HashMap::new(), logic_request_sender, vec![]);
 
-    tokio::spawn(dispatch.run());
+    tokio::spawn(dispatch.run(CancellationToken::new()));
 
     timeout(max_execution_duration, async move {
         let mut count: u8 = 0;
@@ -310,7 +320,7 @@ pub async fn execute_specified_plugins_for_each_input() {
     let dispatch: Dispatch<InputDummyImpl, LogicRequest> =
         Dispatch::new(inputs, HashMap::new(), sender, plugins);
 
-    tokio::spawn(dispatch.run());
+    tokio::spawn(dispatch.run(CancellationToken::new()));
 
     let mut sum: u8 = 0;
 
