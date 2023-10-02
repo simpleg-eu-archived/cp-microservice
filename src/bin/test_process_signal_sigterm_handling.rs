@@ -1,5 +1,6 @@
 use cp_microservice::r#impl::process_signals::listen_to_process_signals;
-use std::process::Command;
+use std::{process::Command, time::Duration};
+use tokio::time::sleep;
 use tokio_util::sync::CancellationToken;
 
 #[tokio::main]
@@ -17,6 +18,8 @@ pub async fn main() {
         .expect("failed to send SIGTERM to process")
         .wait()
         .expect("failed to await for SIGTERM to be sent to process");
+
+    sleep(Duration::from_secs(1)).await;
 
     assert!(cancellation_token.is_cancelled());
 }

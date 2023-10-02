@@ -15,8 +15,6 @@ cd ./target/debug
 
 result_exit_code=0
 
-echo $(kill -l)
-
 # TEST PROCESS SIGNAL SIGINT HANDLING, EXPECTED EXIT CODE: 0
 
 ./test_process_signal_sigint_handling
