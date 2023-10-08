@@ -101,12 +101,15 @@ pub async fn try_initialize_microservice<
 fn get_amqp_connect_config(
     amqp_connection_file: String,
 ) -> Result<AmqpConnectConfig, std::io::Error> {
-    let amqp_connection_file_content = match std::fs::read_to_string(amqp_connection_file) {
+    let amqp_connection_file_content = match std::fs::read_to_string(&amqp_connection_file) {
         Ok(content) => content,
         Err(error) => {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
-                format!("failed to find amqp connection file: {}", &error),
+                format!(
+                    "failed to find amqp connection file '{}': {}",
+                    &amqp_connection_file, &error
+                ),
             ))
         }
     };
@@ -126,12 +129,15 @@ fn get_amqp_connect_config(
 }
 
 fn get_amqp_api<'a>(amqp_api_file: String) -> Result<Vec<AmqpApiEntry>, std::io::Error> {
-    let amqp_api_file_content = match std::fs::read_to_string(amqp_api_file) {
+    let amqp_api_file_content = match std::fs::read_to_string(&amqp_api_file) {
         Ok(content) => content,
         Err(error) => {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
-                format!("failed to find amqp api file: {}", &error),
+                format!(
+                    "failed to find amqp api file '{}': {}",
+                    &amqp_api_file, &error
+                ),
             ))
         }
     };
