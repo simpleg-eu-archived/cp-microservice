@@ -1,8 +1,8 @@
 use std::fmt;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ErrorKind {
     ApiError,
     LogicError,
@@ -12,7 +12,7 @@ pub enum ErrorKind {
     InitializationError,
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Error {
     pub kind: ErrorKind,
     pub message: String,
