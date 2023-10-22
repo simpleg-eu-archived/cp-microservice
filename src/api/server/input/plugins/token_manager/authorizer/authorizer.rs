@@ -88,10 +88,6 @@ impl Token for NoPermissionsToken {
     fn user_id(&self) -> &str {
         todo!()
     }
-
-    fn org_id(&self) -> Option<&str> {
-        todo!()
-    }
 }
 
 #[derive(Default)]
@@ -103,10 +99,6 @@ impl Token for AllPermissionsToken {
     }
 
     fn user_id(&self) -> &str {
-        todo!()
-    }
-
-    fn org_id(&self) -> Option<&str> {
         todo!()
     }
 }
