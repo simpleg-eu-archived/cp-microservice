@@ -1,3 +1,4 @@
+use log::info;
 use tokio::signal::unix::SignalKind;
 use tokio_util::sync::CancellationToken;
 
@@ -26,12 +27,15 @@ pub fn listen_to_process_signals(cancellation_token: CancellationToken) {
 
         tokio::select! {
             _ = sigint.recv() => {
+                info!("received 'sigint' signal");
                 cancellation_token.cancel();
             }
             _ = sigterm.recv() => {
+                info!("received 'sigterm' signal");
                 cancellation_token.cancel();
             }
             _ = sigquit.recv() => {
+                info!("received 'sigquit' signal");
                 cancellation_token.cancel();
             }
         }
