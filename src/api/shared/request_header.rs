@@ -30,11 +30,11 @@ impl RequestHeader {
         self.extra.insert(key, value)
     }
 
-    pub fn has_extra(&self, key: &String) -> bool {
+    pub fn has_extra(&self, key: &str) -> bool {
         self.extra.contains_key(key)
     }
 
-    pub fn get_extra(&self, key: &String) -> Option<&String> {
+    pub fn get_extra(&self, key: &str) -> Option<&String> {
         self.extra.get(key)
     }
 }
