@@ -4,7 +4,7 @@
 
 cp-microservice is meant to be a utility library so you can easily create microservices with Rust. Currently all effort is focused towards AMQP based APIs, although the library can easily be fit to expose REST APIs through HTTP.
 
-## Architecture
+## Architecture
 
 The architecture proposed by cp-microservice for Rust microservices is designed around the idea of 3 layers which run in parallel. These layers are the following:
 
@@ -283,6 +283,6 @@ In order to get started with this library you can use as a reference the followi
    ```
 That would be it for configuring a basic microservice with `cp-microservice`.
 
-## Objective
+## Objective
 
 The current objective of `cp-microservice` is to make the creation of microservices, which usually are created with Spring Boot or similar technologies, easily manageable with Rust.
