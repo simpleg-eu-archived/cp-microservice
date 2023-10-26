@@ -69,7 +69,7 @@ impl<LogicRequestType: Debug, StorageRequestType> Dispatch<LogicRequestType, Sto
             };
 
             if let Err(error) = executor(logic_request, self.storage_request_sender.clone()).await {
-                info!("logic executor returned error: {}", error);
+                info!("logic executor returned error: {}", &error);
             }
         }
     }
